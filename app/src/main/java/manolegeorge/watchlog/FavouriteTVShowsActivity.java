@@ -52,11 +52,6 @@ import java.util.Map;
 
 public class FavouriteTVShowsActivity extends AppCompatActivity {
 
-	private int loadedTVShows = 0;
-	private int tvShowsToLoad = 30;
-
-	private boolean isLoadingMoreItems = false;
-
 	private List<TVShowInfo> tvShows = new ArrayList<>();
 
 	SharedPreferences userSP;
@@ -93,83 +88,6 @@ public class FavouriteTVShowsActivity extends AppCompatActivity {
 
 		final GridAdapter adapter = new GridAdapter(inflater, tvShows, imageLoader);
 		gridView.setAdapter(adapter);
-		gridView.setOnScrollListener(new AbsListView.OnScrollListener() {
-
-			@Override
-			public void onScrollStateChanged(AbsListView view, int scrollState) {}
-
-			@Override
-			public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-				if(totalItemCount >= tvShowsToLoad && (firstVisibleItem + visibleItemCount) == totalItemCount) {
-					if(!isLoadingMoreItems) {
-
-						StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_favourite_tv_shows", new Response.Listener<String>() {
-							@Override
-							public void onResponse(String response) {
-								try {
-									JSONObject jsonObject = new JSONObject(response);
-									if(!jsonObject.getBoolean("error")) {
-
-										JSONArray tvShowsJA = jsonObject.getJSONArray("tv_shows");
-										if(tvShowsJA.length() > 0) {
-											for(int i = 0; i < tvShowsJA.length(); i++) {
-
-												loadedTVShows++;
-
-												JSONObject tvShowJO = tvShowsJA.getJSONObject(i);
-
-												TVShowInfo newTVShow = new TVShowInfo(tvShowJO.getInt("id"), tvShowJO.getString("name"));
-												newTVShow.setPoster(tvShowJO.getString("poster"));
-
-												tvShows.add(newTVShow);
-
-											}
-											adapter.notifyDataSetChanged();
-										}
-
-									} else {
-										Toast.makeText(FavouriteTVShowsActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-									}
-								} catch(JSONException e) {
-									Toast.makeText(FavouriteTVShowsActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-								}
-								isLoadingMoreItems = false;
-							}
-						}, new Response.ErrorListener() {
-							@Override
-							public void onErrorResponse(VolleyError error) {
-								if(error instanceof TimeoutError) {
-									Toast.makeText(FavouriteTVShowsActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-								} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-									Toast.makeText(FavouriteTVShowsActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-								} else {
-									Toast.makeText(FavouriteTVShowsActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-								}
-								isLoadingMoreItems = false;
-							}
-						}) {
-							@Override
-							protected Map<String, String> getParams() {
-								Map<String, String> params = new HashMap<>();
-								params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-								params.put("email_address", userSP.getString("email_address", "undefined"));
-								params.put("language", getResources().getConfiguration().locale.getLanguage());
-								params.put("loaded_tv_shows", String.valueOf(loadedTVShows));
-								params.put("tv_shows_to_load", String.valueOf(tvShowsToLoad));
-								params.put("password", userSP.getString("password", "undefined"));
-								return params;
-							}
-						};
-						stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-						isLoadingMoreItems = true;
-						requestQueue.add(stringRequest2);
-
-					}
-				}
-			}
-
-		});
 		gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -183,7 +101,7 @@ public class FavouriteTVShowsActivity extends AppCompatActivity {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
 
-				CharSequence menuItems[] = new CharSequence[] {
+				CharSequence[] menuItems = new CharSequence[] {
 					getResources().getString(R.string.delete),
 					getResources().getString(R.string.details)
 				};
@@ -202,7 +120,6 @@ public class FavouriteTVShowsActivity extends AppCompatActivity {
 										JSONObject jsonObject = new JSONObject(response);
 										if(!jsonObject.getBoolean("error")) {
 											tvShows.remove(position);
-											loadedTVShows--;
 											adapter.notifyDataSetChanged();
 										} else {
 											Toast.makeText(FavouriteTVShowsActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
@@ -265,7 +182,7 @@ public class FavouriteTVShowsActivity extends AppCompatActivity {
 			}
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_favourite_tv_shows", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/favourites/all", new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response) {
 				try {
@@ -275,8 +192,6 @@ public class FavouriteTVShowsActivity extends AppCompatActivity {
 						JSONArray tvShowsJA = jsonObject.getJSONArray("tv_shows");
 						if(tvShowsJA.length() > 0) {
 							for(int i = 0; i < tvShowsJA.length(); i++) {
-
-								loadedTVShows++;
 
 								JSONObject tvShowJO = tvShowsJA.getJSONObject(i);
 
@@ -303,6 +218,7 @@ public class FavouriteTVShowsActivity extends AppCompatActivity {
 		}, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError error) {
+				error.printStackTrace();
 				if(error instanceof TimeoutError) {
 					textView.setText(getResources().getString(R.string.weak_internet_connection));
 				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
@@ -315,15 +231,11 @@ public class FavouriteTVShowsActivity extends AppCompatActivity {
 			}
 		}) {
 			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("language", getResources().getConfiguration().locale.getLanguage());
-				params.put("loaded_tv_shows", String.valueOf(loadedTVShows));
-				params.put("tv_shows_to_load", String.valueOf(tvShowsToLoad));
-				params.put("password", userSP.getString("password", "undefined"));
-				return params;
+			public Map<String, String> getHeaders() {
+				Map<String, String> headers = new HashMap<>();
+				headers.put("Accept", "application/json");
+				headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+				return headers;
 			}
 		};
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));

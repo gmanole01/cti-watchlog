@@ -37,10 +37,8 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 	private ImageLoader imageLoader;
 	private RequestQueue requestQueue;
 	private SharedPreferences userSP;
-
-	private int totalTVShows = 0;
-	private int loadedTVShows = 0;
-	private int tvShowsToLoad = 30;
+	
+	private int page = 1;
 
 	private List<MovieInfo> tvShows = new ArrayList<>();
 
@@ -82,22 +80,18 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 		loadMore.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				page = page + 1;
 
-				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_tv_shows", new Response.Listener<String>() {
+				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/discover", new Response.Listener<String>() {
 					@Override
 					public void onResponse(String response) {
 						try {
 							JSONObject jsonObject = new JSONObject(response);
 							if(!jsonObject.getBoolean("error")) {
 
-								totalTVShows = jsonObject.getInt("total_tv_shows");
-
 								JSONArray moviesJA = jsonObject.getJSONArray("tv_shows");
 								if(moviesJA.length() > 0) {
 									for(int i = 0; i < moviesJA.length(); i++) {
-
-										loadedTVShows++;
-
 										JSONObject movieJO = moviesJA.getJSONObject(i);
 										JSONArray movieGenresJA = movieJO.getJSONArray("genres");
 
@@ -121,9 +115,6 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 									}
 									adapter.notifyDataSetChanged();
 								}
-								if(loadedTVShows >= totalTVShows) {
-									listView.removeFooterView(loadMore);
-								}
 
 							} else {
 								Toast.makeText(getContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
@@ -136,6 +127,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 				}, new Response.ErrorListener() {
 					@Override
 					public void onErrorResponse(VolleyError error) {
+						error.printStackTrace();
 						if(error instanceof TimeoutError) {
 							Toast.makeText(getContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
 						} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
@@ -149,12 +141,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 					@Override
 					protected Map<String, String> getParams() {
 						Map<String, String> params = new HashMap<>();
-						params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-						params.put("email_address", userSP.getString("email_address", "undefined"));
-						params.put("language", getResources().getConfiguration().locale.getLanguage());
-						params.put("loaded_tv_shows", String.valueOf(loadedTVShows));
-						params.put("tv_shows_to_load", String.valueOf(tvShowsToLoad));
-						params.put("password", userSP.getString("password", "undefined"));
+						params.put("page", String.valueOf(page));
 						return params;
 					}
 				};
@@ -166,7 +153,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 			}
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_tv_shows", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/discover", new Response.Listener<String>() {
 
 			@Override
 			public void onResponse(String response) {
@@ -175,13 +162,9 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 					JSONObject jsonObject = new JSONObject(response);
 					if(!jsonObject.getBoolean("error")) {
 
-						totalTVShows = jsonObject.getInt("total_tv_shows");
-
 						JSONArray moviesJA = jsonObject.getJSONArray("tv_shows");
 						if(moviesJA.length() > 0) {
 							for(int i = 0; i < moviesJA.length(); i++) {
-
-								loadedTVShows++;
 
 								JSONObject movieJO = moviesJA.getJSONObject(i);
 								JSONArray movieGenresJA = movieJO.getJSONArray("genres");
@@ -205,9 +188,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 
 							}
 							adapter.notifyDataSetChanged();
-							if(loadedTVShows < totalTVShows) {
-								listView.addFooterView(loadMore);
-							}
+							listView.addFooterView(loadMore);
 							textView.setVisibility(View.GONE);
 							listView.setVisibility(View.VISIBLE);
 						}
@@ -217,6 +198,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 					}
 
 				} catch(JSONException e) {
+					e.printStackTrace();
 					textView.setText("JSONException");
 				}
 				WatchLog.Utils.fadeOut(loading);
@@ -225,6 +207,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 		}, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError error) {
+				error.printStackTrace();
 				if(error instanceof TimeoutError) {
 					textView.setText(getResources().getString(R.string.weak_internet_connection));
 				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
@@ -235,18 +218,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 				WatchLog.Utils.fadeOut(loading);
 				WatchLog.Utils.fadeIn(content);
 			}
-		}) {
-			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("loaded_tv_shows", String.valueOf(loadedTVShows));
-				params.put("tv_shows_to_load", String.valueOf(tvShowsToLoad));
-				params.put("password", userSP.getString("password", "undefined"));
-				return params;
-			}
-		};
+		});
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
 		requestQueue.add(stringRequest1);

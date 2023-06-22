@@ -96,61 +96,7 @@ public class ViewTVShowActivity extends AppCompatActivity {
 		final ImageView poster = findViewById(R.id.poster);
 		final TextView title = findViewById(R.id.title);
 
-		myRating.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-			@Override
-			public void onRatingChanged(RatingBar ratingBar, final float rating, boolean fromUser) {
-				if(!isSendingRating) {
-
-					StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/rate_tv_show", new Response.Listener<String>() {
-						@Override
-						public void onResponse(String response) {
-
-							try {
-								JSONObject jsonObject = new JSONObject(response);
-								if(jsonObject.getBoolean("error")) {
-									Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-								}
-							} catch(JSONException e) {
-								Toast.makeText(getApplicationContext(), "JSONException", Toast.LENGTH_LONG).show();
-							}
-							isSendingRating = false;
-							myRating.setEnabled(true);
-						}
-					}, new Response.ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							if(error instanceof TimeoutError) {
-								Toast.makeText(getApplicationContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-							} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-								Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-							} else {
-								Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-							}
-							isSendingRating = false;
-							myRating.setEnabled(true);
-						}
-					}) {
-						@Override
-						protected Map<String, String> getParams() {
-							Map<String, String> params = new HashMap<>();
-							params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-							params.put("email_address", userSP.getString("email_address", "undefined"));
-							params.put("tv_show_id", String.valueOf(tvShowId));
-							params.put("password", userSP.getString("password", "undefined"));
-							params.put("rating", String.valueOf(rating));
-							return params;
-						}
-					};
-
-					myRating.setEnabled(false);
-					isSendingRating = true;
-					requestQueue.add(stringRequest2);
-
-				}
-			}
-		});
-
-		StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_tv_show_data", new Response.Listener<String>() {
+		StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId, new Response.Listener<String>() {
 
 			@Override
 			public void onResponse(String response1) {
@@ -173,6 +119,7 @@ public class ViewTVShowActivity extends AppCompatActivity {
 
 							final int seasonNumber = seasons.getJSONObject(i).getInt("season_number");
 							final String seasonName = seasons.getJSONObject(i).getString("name");
+							final int seasonId = seasons.getJSONObject(i).getInt("id");
 
 							View seasonView = inflater.inflate(R.layout.tv_show_list_item_season, null);
 							final WLCheckBox checkBox = seasonView.findViewById(R.id.check_box);
@@ -214,13 +161,16 @@ public class ViewTVShowActivity extends AppCompatActivity {
 											@Override
 											protected Map<String, String> getParams() {
 												Map<String, String> params = new HashMap<>();
-												params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-												params.put("email_address", userSP.getString("email_address", "undefined"));
-												params.put("language", getResources().getConfiguration().locale.getLanguage());
-												params.put("password", userSP.getString("password", "undefined"));
-												params.put("season_number", String.valueOf(seasonNumber));
-												params.put("tv_show_id", String.valueOf(tvShowId));
+												params.put("id", String.valueOf(tvShowId));
 												return params;
+											}
+											
+											@Override
+											public Map<String, String> getHeaders() throws AuthFailureError {
+												Map<String, String> headers = new HashMap<>();
+												headers.put("Accept", "application/json");
+												headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+												return headers;
 											}
 										};
 										requestQueue.add(stringRequest2);
@@ -272,7 +222,7 @@ public class ViewTVShowActivity extends AppCompatActivity {
 								}
 							});
 							name.setText(seasonName);
-							textView.setText(seasons.getJSONObject(i).getInt("watched_episodes") + "/" + seasons.getJSONObject(i).getInt("episodes_count"));
+							textView.setText(seasons.getJSONObject(i).getInt("watched_episodes") + "/" + seasons.getJSONObject(i).getInt("episode_count"));
 							seasonView.setOnClickListener(new View.OnClickListener() {
 								@Override
 								public void onClick(View view) {
@@ -281,6 +231,7 @@ public class ViewTVShowActivity extends AppCompatActivity {
 									intent.putExtra("tv_show_name", tvShowName);
 									intent.putExtra("season_name", seasonName);
 									intent.putExtra("season_number", seasonNumber);
+									intent.putExtra("season_id", seasonId);
 									startActivity(intent);
 								}
 							});
@@ -290,7 +241,6 @@ public class ViewTVShowActivity extends AppCompatActivity {
 
 						overview.setText(dataJO.getString("overview"));
 
-						myRating.setRating((float)dataJO.getDouble("my_rating"));
 						communityRating.setRating((float)dataJO.getDouble("rating"));
 
 					} else {
@@ -299,6 +249,7 @@ public class ViewTVShowActivity extends AppCompatActivity {
 						Toast.makeText(ViewTVShowActivity.this, jsonObject1.getString("error_msg"), Toast.LENGTH_LONG).show();
 					}
 				} catch(JSONException e) {
+					e.printStackTrace();
 					Toast.makeText(ViewTVShowActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 				}
 				WatchLog.Utils.fadeOut(loading);
@@ -308,17 +259,17 @@ public class ViewTVShowActivity extends AppCompatActivity {
 			@Override
 			public void onErrorResponse(VolleyError error) {
 				//WatchLog.Utils.fadeOut(loading, 200);
+				error.printStackTrace();
 				Toast.makeText(ViewTVShowActivity.this, error.toString(), Toast.LENGTH_LONG).show();
 			}
 		}) {
+			
 			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("tv_show_id", String.valueOf(tvShowId));
-				params.put("password", userSP.getString("password", "undefined"));
-				return params;
+			public Map<String, String> getHeaders() throws AuthFailureError {
+				Map<String, String> headers = new HashMap<>();
+				headers.put("Accept", "application/json");
+				headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+				return headers;
 			}
 		};
 		stringRequest.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
@@ -340,7 +291,7 @@ public class ViewTVShowActivity extends AppCompatActivity {
 				finish();
 				return true;
 			case R.id.add_to_favourites:
-				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/add_favourite_tv_show", new Response.Listener<String>() {
+				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/favourites/add", new Response.Listener<String>() {
 					@Override
 					public void onResponse(String response) {
 						progressDialog.dismiss();
@@ -374,12 +325,16 @@ public class ViewTVShowActivity extends AppCompatActivity {
 					@Override
 					protected Map<String, String> getParams() {
 						Map<String, String> params = new HashMap<>();
-						params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-						params.put("email_address", userSP.getString("email_address", "undefined"));
-						params.put("language", getResources().getConfiguration().locale.getLanguage());
-						params.put("tv_show_id", String.valueOf(tvShowId));
-						params.put("password", userSP.getString("password", "undefined"));
+						params.put("id", String.valueOf(tvShowId));
 						return params;
+					}
+					
+					@Override
+					public Map<String, String> getHeaders() {
+						Map<String, String> headers = new HashMap<>();
+						headers.put("Accept", "application/json");
+						headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+						return headers;
 					}
 				};
 				stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));

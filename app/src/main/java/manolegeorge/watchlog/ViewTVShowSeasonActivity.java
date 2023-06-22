@@ -46,8 +46,14 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 
 		super.onCreate(savedInstanceState);
 
-		if(!getIntent().hasExtra("tv_show_id") || !getIntent().hasExtra("tv_show_name") || !getIntent().hasExtra("season_name") || !getIntent().hasExtra("season_number"))
+		if(
+			!getIntent().hasExtra("tv_show_id") ||
+			!getIntent().hasExtra("tv_show_name") ||
+			!getIntent().hasExtra("season_name") ||
+			!getIntent().hasExtra("season_number")
+		) {
 			finish();
+		}
 
 		tvShowId = getIntent().getIntExtra("tv_show_id", 0);
 		tvShowName = getIntent().getStringExtra("tv_show_name");
@@ -72,7 +78,7 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 		final TextView textView = findViewById(R.id.text_view);
 		final LinearLayout loading = findViewById(R.id.loading);
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_tv_show_season_episodes", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber, new Response.Listener<String>() {
 
 			@Override
 			public void onResponse(String response1) {
@@ -98,7 +104,7 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 									public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
 										if(checked) {
 
-											StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/mark_episode_as_watched", new Response.Listener<String>() {
+											StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/watched", new Response.Listener<String>() {
 												@Override
 												public void onResponse(String response3) {
 													try {
@@ -115,6 +121,7 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 											}, new Response.ErrorListener() {
 												@Override
 												public void onErrorResponse(VolleyError error) {
+													error.printStackTrace();
 													checkBox.setChecked(false, false);
 													if(error instanceof TimeoutError) {
 														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
@@ -126,23 +133,18 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 												}
 											}) {
 												@Override
-												protected Map<String, String> getParams() {
-													Map<String, String> params = new HashMap<>();
-													params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-													params.put("email_address", userSP.getString("email_address", "undefined"));
-													params.put("episode_number", String.valueOf(episodeNumber));
-													params.put("language", getResources().getConfiguration().locale.getLanguage());
-													params.put("password", userSP.getString("password", "undefined"));
-													params.put("season_number", String.valueOf(seasonNumber));
-													params.put("tv_show_id", String.valueOf(tvShowId));
-													return params;
+												public Map<String, String> getHeaders() {
+													Map<String, String> headers = new HashMap<>();
+													headers.put("Accept", "application/json");
+													headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+													return headers;
 												}
 											};
 											requestQueue.add(stringRequest3);
 
 										} else {
 
-											StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_watched_episode", new Response.Listener<String>() {
+											StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/not_watched", new Response.Listener<String>() {
 												@Override
 												public void onResponse(String response2) {
 													try {
@@ -159,6 +161,7 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 											}, new Response.ErrorListener() {
 												@Override
 												public void onErrorResponse(VolleyError error) {
+													error.printStackTrace();
 													checkBox.setChecked(true, false);
 													if(error instanceof TimeoutError) {
 														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
@@ -170,16 +173,11 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 												}
 											}) {
 												@Override
-												protected Map<String, String> getParams() {
-													Map<String, String> params = new HashMap<>();
-													params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-													params.put("email_address", userSP.getString("email_address", "undefined"));
-													params.put("episode_number", String.valueOf(episodeNumber));
-													params.put("language", getResources().getConfiguration().locale.getLanguage());
-													params.put("password", userSP.getString("password", "undefined"));
-													params.put("season_number", String.valueOf(seasonNumber));
-													params.put("tv_show_id", String.valueOf(tvShowId));
-													return params;
+												public Map<String, String> getHeaders() {
+													Map<String, String> headers = new HashMap<>();
+													headers.put("Accept", "application/json");
+													headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+													return headers;
 												}
 											};
 											requestQueue.add(stringRequest2);
@@ -195,7 +193,8 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 						textView.setText(jsonObject1.getString("error_msg"));
 					}
 				} catch(JSONException e) {
-					textView.setText("JSONException");
+					e.printStackTrace();
+					//textView.setText("JSONException");
 				}
 				WatchLog.Utils.fadeOut(loading);
 				WatchLog.Utils.fadeIn(content);
@@ -203,19 +202,15 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 		}, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError error) {
-
+				error.printStackTrace();
 			}
 		}) {
 			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("language", getResources().getConfiguration().locale.getLanguage());
-				params.put("password", userSP.getString("password", "undefined"));
-				params.put("season_number", String.valueOf(seasonNumber));
-				params.put("tv_show_id", String.valueOf(tvShowId));
-				return params;
+			public Map<String, String> getHeaders() {
+				Map<String, String> headers = new HashMap<>();
+				headers.put("Accept", "application/json");
+				headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+				return headers;
 			}
 		};
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
