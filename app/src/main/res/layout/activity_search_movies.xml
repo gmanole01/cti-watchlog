@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RelativeLayout
+    android:background="@color/white"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_alignParentTop="true"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:theme="@style/AppTheme.AppBarOverlay">
+        <androidx.appcompat.widget.Toolbar
+            android:background="@color/colorPrimary"
+            android:id="@+id/toolbar"
+            android:layout_height="?attr/actionBarSize"
+            android:layout_width="match_parent"
+            app:contentInsetStartWithNavigation="0dp"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+            <EditText
+                android:background="@android:color/transparent"
+                android:hint="@string/search_movies_hint"
+                android:id="@+id/edit_text"
+                android:imeOptions="actionDone"
+                android:inputType="text"
+                android:layout_height="match_parent"
+                android:layout_width="match_parent"
+                android:paddingEnd="10dp"
+                android:paddingStart="0dp" />
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+    <RelativeLayout
+        android:layout_below="@+id/app_bar_layout"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+        <ListView
+            android:id="@+id/list_view"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent" />
+    </RelativeLayout>
+</RelativeLayout>

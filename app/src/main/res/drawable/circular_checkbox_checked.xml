@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <solid
+                        android:color="@color/colorAccent" />
+                    <size
+                        android:width="24dp"
+                        android:height="24dp" />
+                </shape>
+            </item>
+            <item>
+                <inset
+                    android:drawable="@drawable/ic_check_white_18dp"
+                    android:insetBottom="2dp"
+                    android:insetLeft="2dp"
+                    android:insetRight="2dp"
+                    android:insetTop="2dp" />
+            </item>
+        </layer-list>
+    </item>
+</selector>

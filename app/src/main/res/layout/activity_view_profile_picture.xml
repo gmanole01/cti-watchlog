@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LinearLayout
+    android:background="#000000"
+    android:gravity="center"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.jsibbold.zoomage.ZoomageView
+      android:adjustViewBounds="true"
+      android:id="@+id/profile_picture"
+      android:layout_height="match_parent"
+      android:layout_width="match_parent"
+      app:zoomage_animateOnReset="true"
+      app:zoomage_autoCenter="true"
+      app:zoomage_autoResetMode="UNDER"
+      app:zoomage_doubleTapToZoom="true"
+      app:zoomage_maxScale="6"
+      app:zoomage_minScale="1"
+      app:zoomage_restrictBounds="true"
+      app:zoomage_translatable="true"
+      app:zoomage_zoomable="true" />
+</LinearLayout>

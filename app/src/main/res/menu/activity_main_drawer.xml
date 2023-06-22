@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<menu
+    tools:showIn="navigation_view"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <group android:checkableBehavior="single" android:id="@+id/RksA92k5kajsjA">
+        <item
+            android:icon="@drawable/ic_view_dashboard_black_48dp"
+            android:id="@+id/dashboard"
+            android:title="@string/dashboard" />
+    </group>
+    <item
+        android:title="@string/movies">
+        <menu>
+            <group>
+                <item
+                    android:icon="@drawable/ic_eye_black_48dp"
+                    android:id="@+id/watched_movies"
+                    android:title="@string/watched_alt" />
+                <item
+                    android:icon="@drawable/ic_star_black_48dp"
+                    android:id="@+id/favourite_movies"
+                    android:title="@string/favourites" />
+            </group>
+        </menu>
+    </item>
+    <item
+        android:title="@string/tv_series">
+        <menu>
+            <group>
+                <item
+                    android:icon="@drawable/ic_eye_black_48dp"
+                    android:id="@+id/watched_tv_shows"
+                    android:title="@string/watched_alt" />
+                <item
+                    android:icon="@drawable/ic_star_black_48dp"
+                    android:id="@+id/favourite_tv_shows"
+                    android:title="@string/favourites" />
+            </group>
+        </menu>
+    </item>
+    <item
+        android:title="@string/browse">
+        <menu>
+            <group>
+                <item
+                    android:icon="@drawable/ic_filmstrip_black_48dp"
+                    android:id="@+id/movies"
+                    android:title="@string/movies" />
+                <item
+                    android:icon="@drawable/ic_television_black_48dp"
+                    android:id="@+id/tv_shows"
+                    android:title="@string/tv_series" />
+            </group>
+        </menu>
+    </item>
+    <group android:checkableBehavior="none" android:id="@+id/O92SKewnkt2A">
+        <item
+            android:icon="@drawable/ic_account_group_black_48dp"
+            android:id="@+id/my_friends"
+            android:title="@string/my_friends" />
+        <item
+            android:icon="@drawable/ic_account_multiple_plus_black_48dp"
+            android:id="@+id/friend_requests"
+            android:title="@string/friend_requests" />
+        <item
+            android:icon="@drawable/ic_account_plus_black_48dp"
+            android:id="@+id/add_friend"
+            android:title="@string/add_friend" />
+    </group>
+    <item
+        android:title="@string/settings">
+        <menu>
+            <group>
+                <item
+                    android:icon="@drawable/ic_account_black_48dp"
+                    android:id="@+id/account_settings"
+                    android:title="@string/account" />
+            </group>
+        </menu>
+    </item>
+    <item
+        android:icon="@drawable/ic_exit_to_app_black_48dp"
+        android:id="@+id/logout"
+        android:title="@string/log_out" />
+</menu>

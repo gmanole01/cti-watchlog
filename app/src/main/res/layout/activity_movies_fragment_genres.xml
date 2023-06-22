@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RelativeLayout
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
+        android:gravity="center"
+        android:id="@+id/content"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+        <ListView
+            android:id="@+id/list_view"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/text_view"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:padding="10dp"
+            android:text="@string/no_movies_in_db" />
+    </LinearLayout>
+    <LinearLayout
+        android:gravity="center"
+        android:id="@+id/loading"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:orientation="vertical">
+        <ProgressBar
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content" />
+    </LinearLayout>
+</RelativeLayout>

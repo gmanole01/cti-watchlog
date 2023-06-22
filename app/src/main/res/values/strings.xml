@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+
+	<string name="app_name">WatchLog</string>
+	<string name="dashboard">Tablou de bord</string>
+
+	<string name="description">Descriere</string>
+
+	<string name="cancel">Anulează</string>
+	<string name="ok">OK</string>
+
+	<string name="add_friend_dialog_message">Introdu numele de utilizator al persoanei pe care dorești să o adaugi la prieteni.</string>
+
+	<string name="no_movies_watched">Nu ai vizionat nici un film.</string>
+	<string name="watched_movies">Filme vizionate</string>
+
+	<!-- Common -->
+	<string name="account">Cont</string>
+	<string name="add_friend">Adaugă un prieten</string>
+	<string name="add_to_favourites">Adaugă la favorite</string>
+	<string name="all">Tot</string>
+	<string name="all_alt">Toate</string>
+	<string name="favourites">Favorite</string>
+	<string name="friend_requests">Cereri de prietenie</string>
+	<string name="friends">Prieteni</string>
+	<string name="informations">Informații</string>
+	<string name="log_out">Deconectează-te</string>
+	<string name="log_out_confirmation">Ești sigur că vrei să te deconectezi?</string>
+	<string name="mark_as_watched">Marchează ca vizionat</string>
+	<string name="my_friends">Prietenii mei</string>
+	<string name="no">Nu</string>
+	<string name="no_internet_connection">Nu ești conectat la internet!</string>
+	<string name="overview">Prezentare generală</string>
+	<string name="remove">Șterge</string>
+	<string name="remove_from_list">Șterge din listă</string>
+	<string name="settings">Setări</string>
+	<string name="watched">Vizionat</string>
+	<string name="watched_alt">Vizionate</string>
+	<string name="weak_internet_connection">Conexiunea ta la internet este slabă!</string>
+	<string name="welcome_back">Bine ai revenit!</string>
+	<string name="yes">Da</string>
+
+	<string name="favourite_movies">Filme favorite</string>
+
+	<string name="no_genres">Nu am găsit nici un gen de film.</string>
+
+	<string name="movies_tab_1">Ultimele filme</string>
+	<string name="movies_tab_2">Cele mai bine evaluate filme</string>
+	<string name="movies_tab_3">Genuri</string>
+
+	<!-- Friend system -->
+
+
+	<!-- Movie -->
+	<string name="no_movies_found">Nu am găsit filme.</string>
+	<string name="movie_added_to_favourites">Filmul a fost adăugat la favorite!</string>
+	<string name="movie_info_director"><![CDATA[<b>Director</b>: %s]]></string>
+	<string name="movie_info_writer"><![CDATA[<b>Scriitor(i)</b>: %s]]></string>
+	<string name="movie_marked_as_watched">Filmul a fost marcat ca văzut!</string>
+	<string name="plot">Subiect</string>
+	<string name="no_favourite_movies">Nu ai filme favorite.</string>
+	<string name="tv_show_added_to_favourites">Serialul a fost adăugat la favorite!</string>
+
+	<string name="no_favourite_tv_shows">Nu ai seriale favorite.</string>
+
+	<!-- TV Shows -->
+	<string name="tv_shows">Seriale</string>
+	<string name="tv_shows_tab_1">Ultimele seriale</string>
+	<string name="tv_shows_tab_2">Cele mai bine evaluate seriale</string>
+	<string name="tv_shows_tab_3">Genuri</string>
+	<string name="rating">Evaluare</string>
+	<string name="community_rating">Evaluarea comunității</string>
+	<string name="my_rating">Evaluarea mea</string>
+
+	<!-- Main -->
+	<string name="movies">Filme</string>
+	<string name="my_list">Lista mea</string>
+	<string name="no_movies_in_db">Nu am găsit nici un film în baza de date.</string>
+	<string name="tv_series">Seriale</string>
+
+	<string name="empty_field">Câmpul trebuie completat!</string>
+	<string name="empty_fields">Toate câmpurile trebuie completate!</string>
+	<string name="error">Eroare!</string>
+	<string name="please_wait">Te rog să aștepți…</string>
+
+	<string name="login">Autentificare</string>
+	<string name="email_address">Adresă de e-mail</string>
+	<string name="username">Nume de utilizator</string>
+	<string name="password">Parolă</string>
+	<string name="repeat_password">Repetă parola</string>
+	<string name="login_forgot_password">Ai uitat parola?</string>
+	<string name="login_button">Autentifică-te</string>
+	<string name="login_register">Nu ai cont? Înregistrează-te!</string>
+
+	<string name="register">Înregistrare</string>
+	<string name="register_button">Înregistrează-te</string>
+	<string name="r_login">Ai deja cont? Autentifică-te!</string>
+	<string name="successful_register">Contul tău a fost creat cu succes! Verifică adresa de e-mail pentru confirmare.</string>
+	<string name="title_activity_main">MainActivity</string>
+	<string name="navigation_drawer_open">Open navigation drawer</string>
+	<string name="navigation_drawer_close">Close navigation drawer</string>
+	<string name="nav_header_title">Android Studio</string>
+	<string name="nav_header_subtitle">android.studio@android.com</string>
+	<string name="nav_header_desc">Navigation header</string>
+	<string name="action_settings">Settings</string>
+
+	<string name="nothing_to_show">Nimic de afișat.</string>
+
+	<!-- Add friend -->
+	<string name="add_friend_success">Cererea de prietenie a fost trimisă!</string>
+
+	<!-- Settings -->
+	<string name="account_settings">Setări cont</string>
+
+	<!-- Reset password -->
+	<string name="reset_password">Resetează parola</string>
+	<string name="reset_password_message">Introdu mai jos adresa de e-mail pentru a reseta parola.</string>
+	<string name="reset_password_success">Un e-mail a fost trimis către această adresă în vederea resetării parolei.</string>
+
+	<string name="no_friend_requests">Nu ai nici o cerere de prietenie.</string>
+
+	<string name="no_friends">Nu ai nici un prieten.</string>
+
+	<string name="browse">Navighează</string>
+
+	<string name="load_more">Încarcă mai mulți</string>
+	<string name="load_more_alt">Încarcă mai multe</string>
+
+	<string name="added">Adăugat</string>
+	<string name="display">Afișează</string>
+	<string name="hide">Ascunde</string>
+	<string name="delete">Șterge</string>
+	<string name="details">Detalii</string>
+
+	<string name="search">Caută</string>
+	<string name="search_movies_hint">Caută…</string>
+
+	<string name="hidden_movies">Filme ascunse</string>
+	<string name="no_hidden_movies">Nu ai nici un film ascuns.</string>
+
+	<!-- ViewMovieActivity -->
+	<string name="movie_info_1"><![CDATA[<b>Titlu:</b> %s]]></string>
+	<string name="movie_info_2"><![CDATA[<b>Durată:</b> %s]]></string>
+	<string name="movie_info_3"><![CDATA[<b>Buget:</b> %s]]></string>
+	<string name="movie_info_4"><![CDATA[<b>Venituri:</b> %s]]></string>
+
+	<string name="change_profile_picture">Schimbă poza de profil</string>
+	<string name="view_profile_picture">Vezi poza de profil</string>
+
+	<string name="profile_picture_error_1">Poza de profil este prea mică!</string>
+	<string name="profile_picture_error_2">Poza de profil este prea mare!</string>
+
+	<string name="watched_tv_shows">Seriale vizionate</string>
+	<string name="favourite_tv_shows">Seriale favorite</string>
+
+</resources>

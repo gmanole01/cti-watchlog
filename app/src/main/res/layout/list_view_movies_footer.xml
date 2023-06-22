@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Button
+    android:background="?attr/selectableItemBackground"
+    android:id="@+id/load_more"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:stateListAnimator="@null"
+    android:text="@string/load_more_alt"
+    android:textColor="@color/colorAccent"
+    xmlns:android="http://schemas.android.com/apk/res/android" />

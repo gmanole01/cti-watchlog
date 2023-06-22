@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ScrollView xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/colorPrimary"
+    android:focusableInTouchMode="true"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout
+        android:focusableInTouchMode="true"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:padding="20dp">
+        <LinearLayout
+            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:padding="50dp">
+            <ImageView
+                android:adjustViewBounds="true"
+                android:layout_height="45dp"
+                android:layout_width="wrap_content"
+                android:src="@drawable/logo_text"
+                tools:ignore="ContentDescription"
+                app:tint="@color/colorAccent" />
+        </LinearLayout>
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_width="wrap_content"
+            android:text="@string/register"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_width="match_parent">
+            <EditText
+                android:hint="@string/email_address"
+                android:id="@+id/email_address"
+                android:inputType="textEmailAddress"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_width="match_parent">
+            <EditText
+                android:hint="@string/username"
+                android:id="@+id/username"
+                android:inputType="text"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_width="match_parent">
+            <EditText
+                android:hint="@string/password"
+                android:id="@+id/password"
+                android:inputType="textPassword"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_width="match_parent">
+            <EditText
+                android:hint="@string/repeat_password"
+                android:id="@+id/repeat_password"
+                android:inputType="textPassword"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <Button
+            android:background="@drawable/lr_button_background"
+            android:id="@+id/register"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:stateListAnimator="@null"
+            android:text="@string/register_button"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</ScrollView>

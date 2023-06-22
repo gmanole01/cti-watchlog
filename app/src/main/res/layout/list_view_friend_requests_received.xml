@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <ImageView
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:id="@+id/profile_picture"
+        android:layout_height="80dp"
+        android:layout_width="80dp"
+        tools:ignore="ContentDescription" />
+    <LinearLayout
+        android:gravity="center_vertical"
+        android:id="@+id/info"
+        android:layout_centerVertical="true"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/profile_picture"
+        android:layout_toStartOf="@+id/buttons"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp">
+        <TextView
+            android:ellipsize="end"
+            android:id="@+id/username"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:maxLines="1"
+            android:textColor="#000000"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+        <TextView
+            android:ellipsize="end"
+            android:id="@+id/date"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:maxLines="1"
+            android:textColor="#333333"
+            android:textSize="12sp" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/buttons"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:orientation="horizontal"
+        android:padding="5dp">
+        <ImageButton
+            android:id="@+id/accept"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:layout_width="wrap_content"
+            android:src="@drawable/ic_check_black_18dp"
+            tools:ignore="ContentDescription" />
+        <ImageButton
+            android:id="@+id/refuse"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:src="@drawable/ic_close_black_18dp"
+            tools:ignore="ContentDescription" />
+    </LinearLayout>
+</RelativeLayout>

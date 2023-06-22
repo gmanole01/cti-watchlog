@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "452325366169",
+    "firebase_url": "https://watchlog-562ad.firebaseio.com",
+    "project_id": "watchlog-562ad",
+    "storage_bucket": "watchlog-562ad.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:452325366169:android:fa687dfe83fb3e53469b08",
+        "android_client_info": {
+          "package_name": "manolegeorge.watchlog"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "452325366169-3am02gkn22n3ahjh7l07li9na6u58ong.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0pPhi0VhiykPCDb7olv6bixEMEiqcZBE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "452325366169-3am02gkn22n3ahjh7l07li9na6u58ong.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
