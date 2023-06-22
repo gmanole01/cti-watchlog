@@ -22,12 +22,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @SuppressLint({"InflateParams", "SetTextI18n", "ViewHolder"})
-@SuppressWarnings({"ConstantConditions", "deprecation"})
+@SuppressWarnings({"ConstantConditions"})
 
 public class TVShowsActivityFragmentGenres extends Fragment {
 
@@ -58,63 +56,53 @@ public class TVShowsActivityFragmentGenres extends Fragment {
 
 		final ListAdapter adapter = new ListAdapter(inflater, genres);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-				Intent intent = new Intent(getContext(), TVShowsByGenreActivity.class);
-				intent.putExtra("genre_id", genres.get(position).getId());
-				intent.putExtra("genre_name", genres.get(position).getName());
-				startActivity(intent);
-			}
+		listView.setOnItemClickListener((adapterView, view1, position, l) -> {
+			Intent intent = new Intent(getContext(), TVShowsByGenreActivity.class);
+			intent.putExtra("genre_id", genres.get(position).getId());
+			intent.putExtra("genre_name", genres.get(position).getName());
+			startActivity(intent);
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/genres", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/genres", response -> {
+			try {
 
-			@Override
-			public void onResponse(String response) {
-				try {
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
 
-					JSONObject jsonObject = new JSONObject(response);
-					if(!jsonObject.getBoolean("error")) {
-
-						JSONArray genresJA = jsonObject.getJSONArray("genres");
-						if(genresJA.length() > 0) {
-							for(int i = 0; i < genresJA.length(); i++) {
-								genres.add(new GenreInfo(
-									genresJA.getJSONObject(i).getInt("id"),
-									genresJA.getJSONObject(i).getString("name")
-								));
-							}
-							adapter.notifyDataSetChanged();
-							textView.setVisibility(View.GONE);
-							listView.setVisibility(View.VISIBLE);
+					JSONArray genresJA = jsonObject.getJSONArray("genres");
+					if(genresJA.length() > 0) {
+						for(int i = 0; i < genresJA.length(); i++) {
+							genres.add(new GenreInfo(
+								genresJA.getJSONObject(i).getInt("id"),
+								genresJA.getJSONObject(i).getString("name")
+							));
 						}
-
-					} else {
-						textView.setText(jsonObject.getString("error_msg"));
+						adapter.notifyDataSetChanged();
+						textView.setVisibility(View.GONE);
+						listView.setVisibility(View.VISIBLE);
 					}
 
-				} catch(JSONException e) {
-					e.printStackTrace();
-					textView.setText("JSONException");
-				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				error.printStackTrace();
-				if(error instanceof TimeoutError) {
-					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-					textView.setText(getResources().getString(R.string.no_internet_connection));
 				} else {
-					textView.setText(getResources().getString(R.string.error));
+					textView.setText(jsonObject.getString("error_msg"));
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+
+			} catch(JSONException e) {
+				e.printStackTrace();
+				textView.setText("JSONException");
 			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, error -> {
+			error.printStackTrace();
+			if(error instanceof TimeoutError) {
+				textView.setText(getResources().getString(R.string.weak_internet_connection));
+			} else if(error instanceof NetworkError) {
+				textView.setText(getResources().getString(R.string.no_internet_connection));
+			} else {
+				textView.setText(getResources().getString(R.string.error));
+			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
 		});
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
@@ -124,7 +112,7 @@ public class TVShowsActivityFragmentGenres extends Fragment {
 
 	}
 
-	private class ListAdapter extends BaseAdapter {
+	private static class ListAdapter extends BaseAdapter {
 
 		LayoutInflater inflater;
 		List<GenreInfo> genres;

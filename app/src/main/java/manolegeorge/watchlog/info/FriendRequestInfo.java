@@ -2,9 +2,9 @@ package manolegeorge.watchlog.info;
 
 public class FriendRequestInfo {
 
-    private int id;
-    private UserInfo userInfo;
-    private long timestamp;
+    private final int id;
+    private final UserInfo userInfo;
+    private final long timestamp;
 
     public FriendRequestInfo(int mId, long mTimestamp, UserInfo mUserInfo) {
         this.id = mId;

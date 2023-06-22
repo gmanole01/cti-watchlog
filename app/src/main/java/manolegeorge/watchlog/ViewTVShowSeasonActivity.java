@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -28,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SuppressLint({"InflateParams", "SetTextI18n"})
-@SuppressWarnings({"FieldCanBeLocal", "ConstantConditions", "deprecation"})
+@SuppressWarnings({"FieldCanBeLocal", "ConstantConditions"})
 
 public class ViewTVShowSeasonActivity extends AppCompatActivity {
 
@@ -78,133 +77,109 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 		final TextView textView = findViewById(R.id.text_view);
 		final LinearLayout loading = findViewById(R.id.loading);
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber, new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber, response1 -> {
+			try {
+				final JSONObject jsonObject1 = new JSONObject(response1);
+				if(!jsonObject1.getBoolean("error")) {
 
-			@Override
-			public void onResponse(String response1) {
-				try {
-					final JSONObject jsonObject1 = new JSONObject(response1);
-					if(!jsonObject1.getBoolean("error")) {
+					JSONArray episodesJA = jsonObject1.getJSONArray("episodes");
+					if(episodesJA.length() > 0) {
+						for(int i = 0; i < episodesJA.length(); i++) {
 
-						JSONArray episodesJA = jsonObject1.getJSONArray("episodes");
-						if(episodesJA.length() > 0) {
-							for(int i = 0; i < episodesJA.length(); i++) {
+							final int episodeNumber = episodesJA.getJSONObject(i).getInt("episode_number");
 
-								final int episodeNumber = episodesJA.getJSONObject(i).getInt("episode_number");
+							View view = inflater.inflate(R.layout.tv_show_list_item_episode, null);
+							TextView number = view.findViewById(R.id.number);
+							TextView name = view.findViewById(R.id.name);
+							final WLCheckBox checkBox = view.findViewById(R.id.check_box);
+							number.setText(((episodeNumber < 10) ? "0" : "" ) + episodeNumber);
+							name.setText(episodesJA.getJSONObject(i).getString("name"));
+							checkBox.setChecked(episodesJA.getJSONObject(i).getBoolean("is_watched"));
+							checkBox.setOnCheckedChangeListener((compoundButton, checked) -> {
+								if(checked) {
 
-								View view = inflater.inflate(R.layout.tv_show_list_item_episode, null);
-								TextView number = view.findViewById(R.id.number);
-								TextView name = view.findViewById(R.id.name);
-								final WLCheckBox checkBox = view.findViewById(R.id.check_box);
-								number.setText(((episodeNumber < 10) ? "0" : "" ) + episodeNumber);
-								name.setText(episodesJA.getJSONObject(i).getString("name"));
-								checkBox.setChecked(episodesJA.getJSONObject(i).getBoolean("is_watched"));
-								checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-									@Override
-									public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-										if(checked) {
-
-											StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/watched", new Response.Listener<String>() {
-												@Override
-												public void onResponse(String response3) {
-													try {
-														JSONObject jsonObject3 = new JSONObject(response3);
-														if(jsonObject3.getBoolean("error")) {
-															checkBox.setChecked(false, false);
-															Toast.makeText(ViewTVShowSeasonActivity.this, jsonObject3.getString("error_msg"), Toast.LENGTH_LONG).show();
-														}
-													} catch(JSONException e) {
-														checkBox.setChecked(false, false);
-														Toast.makeText(ViewTVShowSeasonActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-													}
-												}
-											}, new Response.ErrorListener() {
-												@Override
-												public void onErrorResponse(VolleyError error) {
-													error.printStackTrace();
-													checkBox.setChecked(false, false);
-													if(error instanceof TimeoutError) {
-														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-													} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-													} else {
-														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-													}
-												}
-											}) {
-												@Override
-												public Map<String, String> getHeaders() {
-													Map<String, String> headers = new HashMap<>();
-													headers.put("Accept", "application/json");
-													headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
-													return headers;
-												}
-											};
-											requestQueue.add(stringRequest3);
-
-										} else {
-
-											StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/not_watched", new Response.Listener<String>() {
-												@Override
-												public void onResponse(String response2) {
-													try {
-														JSONObject jsonObject2 = new JSONObject(response2);
-														if(jsonObject2.getBoolean("error")) {
-															checkBox.setChecked(true, false);
-															Toast.makeText(ViewTVShowSeasonActivity.this, jsonObject2.getString("error_msg"), Toast.LENGTH_LONG).show();
-														}
-													} catch(JSONException e) {
-														checkBox.setChecked(true, false);
-														Toast.makeText(ViewTVShowSeasonActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-													}
-												}
-											}, new Response.ErrorListener() {
-												@Override
-												public void onErrorResponse(VolleyError error) {
-													error.printStackTrace();
-													checkBox.setChecked(true, false);
-													if(error instanceof TimeoutError) {
-														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-													} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-													} else {
-														Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-													}
-												}
-											}) {
-												@Override
-												public Map<String, String> getHeaders() {
-													Map<String, String> headers = new HashMap<>();
-													headers.put("Accept", "application/json");
-													headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
-													return headers;
-												}
-											};
-											requestQueue.add(stringRequest2);
+									StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/watched", response3 -> {
+										try {
+											JSONObject jsonObject3 = new JSONObject(response3);
+											if(jsonObject3.getBoolean("error")) {
+												checkBox.setChecked(false, false);
+												Toast.makeText(ViewTVShowSeasonActivity.this, jsonObject3.getString("error_msg"), Toast.LENGTH_LONG).show();
+											}
+										} catch(JSONException e) {
+											checkBox.setChecked(false, false);
+											Toast.makeText(ViewTVShowSeasonActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 										}
-									}
-								});
-								linearLayout.addView(view);
+									}, error -> {
+										error.printStackTrace();
+										checkBox.setChecked(false, false);
+										if(error instanceof TimeoutError) {
+											Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+										} else if(error instanceof NetworkError) {
+											Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+										} else {
+											Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+										}
+									}) {
+										@Override
+										public Map<String, String> getHeaders() {
+											Map<String, String> headers = new HashMap<>();
+											headers.put("Accept", "application/json");
+											headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+											return headers;
+										}
+									};
+									requestQueue.add(stringRequest3);
 
-							}
+								} else {
+
+									StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/get/" + tvShowId + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/not_watched", response2 -> {
+										try {
+											JSONObject jsonObject2 = new JSONObject(response2);
+											if(jsonObject2.getBoolean("error")) {
+												checkBox.setChecked(true, false);
+												Toast.makeText(ViewTVShowSeasonActivity.this, jsonObject2.getString("error_msg"), Toast.LENGTH_LONG).show();
+											}
+										} catch(JSONException e) {
+											checkBox.setChecked(true, false);
+											Toast.makeText(ViewTVShowSeasonActivity.this, "JSONException", Toast.LENGTH_LONG).show();
+										}
+									}, error -> {
+										error.printStackTrace();
+										checkBox.setChecked(true, false);
+										if(error instanceof TimeoutError) {
+											Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+										} else if(error instanceof NetworkError) {
+											Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+										} else {
+											Toast.makeText(ViewTVShowSeasonActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+										}
+									}) {
+										@Override
+										public Map<String, String> getHeaders() {
+											Map<String, String> headers = new HashMap<>();
+											headers.put("Accept", "application/json");
+											headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+											return headers;
+										}
+									};
+									requestQueue.add(stringRequest2);
+								}
+							});
+							linearLayout.addView(view);
+
 						}
-
-					} else {
-						textView.setText(jsonObject1.getString("error_msg"));
 					}
-				} catch(JSONException e) {
-					e.printStackTrace();
-					//textView.setText("JSONException");
+
+				} else {
+					textView.setText(jsonObject1.getString("error_msg"));
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+			} catch(JSONException e) {
+				e.printStackTrace();
+				//textView.setText("JSONException");
 			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				error.printStackTrace();
-			}
-		}) {
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, Throwable::printStackTrace) {
 			@Override
 			public Map<String, String> getHeaders() {
 				Map<String, String> headers = new HashMap<>();
@@ -221,10 +196,9 @@ public class ViewTVShowSeasonActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case android.R.id.home:
-				finish();
-				return true;
+		if (item.getItemId() == android.R.id.home) {
+			finish();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}

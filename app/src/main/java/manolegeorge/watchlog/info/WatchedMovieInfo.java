@@ -1,15 +1,12 @@
 package manolegeorge.watchlog.info;
 
-@SuppressWarnings("ALL")
 
 public class WatchedMovieInfo {
 
-    private int id;
-    private long timestamp;
-    private MovieInfo movieInfo;
+    private final long timestamp;
+    private final MovieInfo movieInfo;
 
-    public WatchedMovieInfo(int mId, long mTimestamp, MovieInfo mMovieInfo) {
-        this.id = mId;
+    public WatchedMovieInfo(long mTimestamp, MovieInfo mMovieInfo) {
         this.timestamp = mTimestamp;
         this.movieInfo = mMovieInfo;
     }

@@ -3,7 +3,6 @@ package manolegeorge.watchlog;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -13,7 +12,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -29,9 +27,7 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -56,7 +52,7 @@ import manolegeorge.watchlog.info.MovieInfo;
 import manolegeorge.watchlog.info.WatchedMovieInfo;
 
 @SuppressLint({"InflateParams", "SetTextI18n"})
-@SuppressWarnings({"ConstantConditions", "Deprecated"})
+@SuppressWarnings({"ConstantConditions"})
 
 public class WatchedMoviesActivity extends AppCompatActivity {
 	
@@ -66,6 +62,7 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 	RequestQueue requestQueue;
 	ImageLoader imageLoader;
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		
@@ -96,193 +93,169 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 		
 		final GridAdapter adapter = new GridAdapter(inflater, movies, imageLoader);
 		gridView.setAdapter(adapter);
-		gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Intent intent = new Intent(WatchedMoviesActivity.this, ViewMovieActivity.class);
-				intent.putExtra("movie_id", movies.get(position).getMovieInfo().getId());
-				intent.putExtra("movie_title", movies.get(position).getMovieInfo().getTitle());
-				startActivity(intent);
-			}
+		gridView.setOnItemClickListener((parent, view, position, id) -> {
+			Intent intent = new Intent(WatchedMoviesActivity.this, ViewMovieActivity.class);
+			intent.putExtra("movie_id", movies.get(position).getMovieInfo().getId());
+			intent.putExtra("movie_title", movies.get(position).getMovieInfo().getTitle());
+			startActivity(intent);
 		});
-		gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-			@Override
-			public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-				
-				CharSequence[] menuItems = new CharSequence[]{
-						getResources().getString(R.string.hide),
-						getResources().getString(R.string.delete),
-						getResources().getString(R.string.details)
-				};
-				
-				AlertDialog.Builder builder1 = new AlertDialog.Builder(WatchedMoviesActivity.this);
-				builder1.setTitle(movies.get(position).getMovieInfo().getTitle());
-				builder1.setItems(menuItems, new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						if (which == 1) {
-							
-							StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_watched_movie", new Response.Listener<String>() {
-								@Override
-								public void onResponse(String response) {
-									try {
-										JSONObject jsonObject = new JSONObject(response);
-										if (!jsonObject.getBoolean("error")) {
-											movies.remove(position);
-											// totalMovies--;
-											// loadedMovies--;
-											adapter.notifyDataSetChanged();
-										} else {
-											Toast.makeText(WatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-										}
-									} catch (JSONException e) {
-										Toast.makeText(WatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-									}
-									progressDialog.dismiss();
-								}
-							}, new Response.ErrorListener() {
-								@Override
-								public void onErrorResponse(VolleyError error) {
-									progressDialog.dismiss();
-									if (error instanceof TimeoutError) {
-										Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-									} else if (error instanceof NetworkError) {
-										Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-									} else {
-										Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-									}
-								}
-							}) {
-								@Override
-								protected Map<String, String> getParams() {
-									Map<String, String> params = new HashMap<>();
-									params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-									params.put("email_address", userSP.getString("email_address", "undefined"));
-									params.put("language", getResources().getConfiguration().locale.getLanguage());
-									params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
-									params.put("password", userSP.getString("password", "undefined"));
-									return params;
-								}
-							};
-							stringRequest3.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-							
-							progressDialog.show();
-							requestQueue.add(stringRequest3);
-							
-						} else if (which == 2) {
-							
-							View watchedMovieDetailsDialogView = inflater.inflate(R.layout.dialog_watched_movie_details, null);
-							
-							TextView watchedDate = watchedMovieDetailsDialogView.findViewById(R.id.watched_date);
-							watchedDate.setText(new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US).format(new Date(movies.get(position).getTimestamp() * 1000)));
-							
-							AlertDialog.Builder builder2 = new AlertDialog.Builder(WatchedMoviesActivity.this);
-							builder2.setCancelable(false);
-							builder2.setView(watchedMovieDetailsDialogView);
-							builder2.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									//
-								}
-							});
-							builder2.show();
-							
+		gridView.setOnItemLongClickListener((parent, view, position, id) -> {
+			
+			CharSequence[] menuItems = new CharSequence[]{
+					getResources().getString(R.string.hide),
+					getResources().getString(R.string.delete),
+					getResources().getString(R.string.details)
+			};
+			
+			AlertDialog.Builder builder1 = new AlertDialog.Builder(WatchedMoviesActivity.this);
+			builder1.setTitle(movies.get(position).getMovieInfo().getTitle());
+			builder1.setItems(menuItems, (dialog, which) -> {
+				if (which == 1) {
+					
+					StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_watched_movie", response -> {
+						try {
+							JSONObject jsonObject = new JSONObject(response);
+							if (!jsonObject.getBoolean("error")) {
+								movies.remove(position);
+								// totalMovies--;
+								// loadedMovies--;
+								adapter.notifyDataSetChanged();
+							} else {
+								Toast.makeText(WatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
+							}
+						} catch (JSONException e) {
+							Toast.makeText(WatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 						}
-					}
-				});
-				builder1.show();
-				return true;
-			}
+						progressDialog.dismiss();
+					}, error -> {
+						progressDialog.dismiss();
+						if (error instanceof TimeoutError) {
+							Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+						} else if (error instanceof NetworkError) {
+							Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+						} else {
+							Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+						}
+					}) {
+						@Override
+						protected Map<String, String> getParams() {
+							Map<String, String> params = new HashMap<>();
+							params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
+							params.put("email_address", userSP.getString("email_address", "undefined"));
+							params.put("language", getResources().getConfiguration().locale.getLanguage());
+							params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
+							params.put("password", userSP.getString("password", "undefined"));
+							return params;
+						}
+					};
+					stringRequest3.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+					
+					progressDialog.show();
+					requestQueue.add(stringRequest3);
+					
+				} else if (which == 2) {
+					
+					View watchedMovieDetailsDialogView = inflater.inflate(R.layout.dialog_watched_movie_details, null);
+					
+					TextView watchedDate = watchedMovieDetailsDialogView.findViewById(R.id.watched_date);
+					watchedDate.setText(new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US).format(new Date(movies.get(position).getTimestamp() * 1000)));
+					
+					AlertDialog.Builder builder2 = new AlertDialog.Builder(WatchedMoviesActivity.this);
+					builder2.setCancelable(false);
+					builder2.setView(watchedMovieDetailsDialogView);
+					builder2.setPositiveButton(getResources().getString(R.string.ok), (dialog1, which1) -> {
+						//
+					});
+					builder2.show();
+					
+				}
+			});
+			builder1.show();
+			return true;
 		});
 		
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/watched/all", new Response.Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				try {
-					JSONObject jsonObject = new JSONObject(response);
-					if (!jsonObject.getBoolean("error")) {
-						
-						JSONArray moviesJA = jsonObject.getJSONArray("movies");
-						if (moviesJA.length() > 0) {
-							for (int i = 0; i < moviesJA.length(); i++) {
-								
-								JSONObject movieJO = moviesJA.getJSONObject(i);
-								JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
-								
-								MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
-								newMovie.setReleaseDate(movieDataJO.getString("release_date"));
-								newMovie.setPoster(movieDataJO.getString("poster"));
-								
-								movies.add(new WatchedMovieInfo(movieJO.getInt("id"), movieJO.getLong("timestamp"), newMovie));
-								
-							}
-							adapter.notifyDataSetChanged();
-							textView.setVisibility(View.GONE);
-							gridView.setVisibility(View.VISIBLE);
-						}
-						
-					} else {
-						textView.setText(jsonObject.getString("error_msg"));
-					}
-				} catch (JSONException e) {
-					textView.setText("JSONException");
-				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (error instanceof TimeoutError) {
-					MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
-					List<Movie> movies1 = movieDao.getAllWatched();
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/watched/all", response -> {
+			try {
+				JSONObject jsonObject = new JSONObject(response);
+				if (!jsonObject.getBoolean("error")) {
 					
-					if (!movies1.isEmpty()) {
-						for (Movie m : movies1) {
-							MovieInfo newMovie = new MovieInfo(m.api_id, m.title);
-							newMovie.setReleaseDate(m.release_date);
-							newMovie.setPoster(m.poster);
+					JSONArray moviesJA = jsonObject.getJSONArray("movies");
+					if (moviesJA.length() > 0) {
+						for (int i = 0; i < moviesJA.length(); i++) {
 							
-							movies.add(new WatchedMovieInfo(0, 0, newMovie));
+							JSONObject movieJO = moviesJA.getJSONObject(i);
+							JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
+							
+							MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
+							newMovie.setReleaseDate(movieDataJO.getString("release_date"));
+							newMovie.setPoster(movieDataJO.getString("poster"));
+							
+							movies.add(new WatchedMovieInfo(movieJO.getLong("timestamp"), newMovie));
+							
 						}
-						
 						adapter.notifyDataSetChanged();
 						textView.setVisibility(View.GONE);
 						gridView.setVisibility(View.VISIBLE);
-						WatchLog.Utils.fadeOut(loading);
-						WatchLog.Utils.fadeIn(content);
-						return;
 					}
 					
-					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if (error instanceof NetworkError) {
-					MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
-					List<Movie> movies1 = movieDao.getAllWatched();
-					
-					if (!movies1.isEmpty()) {
-						for (Movie m : movies1) {
-							MovieInfo newMovie = new MovieInfo(m.api_id, m.title);
-							newMovie.setReleaseDate(m.release_date);
-							newMovie.setPoster(m.poster);
-							
-							movies.add(new WatchedMovieInfo(0, 0, newMovie));
-						}
-						
-						adapter.notifyDataSetChanged();
-						textView.setVisibility(View.GONE);
-						gridView.setVisibility(View.VISIBLE);
-						WatchLog.Utils.fadeOut(loading);
-						WatchLog.Utils.fadeIn(content);
-						return;
-					}
-					
-					textView.setText(getResources().getString(R.string.no_internet_connection));
 				} else {
-					textView.setText(getResources().getString(R.string.error));
+					textView.setText(jsonObject.getString("error_msg"));
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+			} catch (JSONException e) {
+				textView.setText("JSONException");
 			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, error -> {
+			if (error instanceof TimeoutError) {
+				MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
+				List<Movie> movies1 = movieDao.getAllWatched();
+				
+				if (!movies1.isEmpty()) {
+					for (Movie m : movies1) {
+						MovieInfo newMovie = new MovieInfo(m.api_id, m.title);
+						newMovie.setReleaseDate(m.release_date);
+						newMovie.setPoster(m.poster);
+						
+						movies.add(new WatchedMovieInfo(0, newMovie));
+					}
+					
+					adapter.notifyDataSetChanged();
+					textView.setVisibility(View.GONE);
+					gridView.setVisibility(View.VISIBLE);
+					WatchLog.Utils.fadeOut(loading);
+					WatchLog.Utils.fadeIn(content);
+					return;
+				}
+				
+				textView.setText(getResources().getString(R.string.weak_internet_connection));
+			} else if (error instanceof NetworkError) {
+				MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
+				List<Movie> movies1 = movieDao.getAllWatched();
+				
+				if (!movies1.isEmpty()) {
+					for (Movie m : movies1) {
+						MovieInfo newMovie = new MovieInfo(m.api_id, m.title);
+						newMovie.setReleaseDate(m.release_date);
+						newMovie.setPoster(m.poster);
+						
+						movies.add(new WatchedMovieInfo(0, newMovie));
+					}
+					
+					adapter.notifyDataSetChanged();
+					textView.setVisibility(View.GONE);
+					gridView.setVisibility(View.VISIBLE);
+					WatchLog.Utils.fadeOut(loading);
+					WatchLog.Utils.fadeIn(content);
+					return;
+				}
+				
+				textView.setText(getResources().getString(R.string.no_internet_connection));
+			} else {
+				textView.setText(getResources().getString(R.string.error));
+			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
 		}) {
 			@Override
 			public Map<String, String> getHeaders() {
@@ -304,6 +277,7 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 		return true;
 	}
 	
+	@SuppressLint("NonConstantResourceId")
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -317,7 +291,7 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 		return super.onOptionsItemSelected(item);
 	}
 	
-	public class GridAdapter extends BaseAdapter {
+	public static class GridAdapter extends BaseAdapter {
 		
 		private LayoutInflater inflater;
 		private List<WatchedMovieInfo> movies;
@@ -367,7 +341,7 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 			return convertView;
 		}
 		
-		public class ViewHolder {
+		public static class ViewHolder {
 			public ImageView poster;
 		}
 		

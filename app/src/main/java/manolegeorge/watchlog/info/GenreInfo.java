@@ -2,8 +2,8 @@ package manolegeorge.watchlog.info;
 
 public class GenreInfo {
 
-  private int id;
-  private String name;
+  private final int id;
+  private final String name;
 
   public GenreInfo(int mId, String mName) {
     this.id = mId;

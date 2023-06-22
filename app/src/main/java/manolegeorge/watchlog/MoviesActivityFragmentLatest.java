@@ -30,9 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@SuppressLint({"InflateParams", "SetTextI18n"})
-@SuppressWarnings({"ConstantConditions", "deprecation"})
-
 public class MoviesActivityFragmentLatest extends Fragment {
 
 	private ImageLoader imageLoader;
@@ -43,6 +40,7 @@ public class MoviesActivityFragmentLatest extends Fragment {
 
 	List<MovieInfo> movies = new ArrayList<>();
 
+	@SuppressWarnings("ConstantConditions")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -57,6 +55,7 @@ public class MoviesActivityFragmentLatest extends Fragment {
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
+		@SuppressLint("InflateParams")
 		View view = inflater.inflate(R.layout.activity_movies_fragment_latest, null);
 
 		final LinearLayout content = view.findViewById(R.id.content);
@@ -66,102 +65,21 @@ public class MoviesActivityFragmentLatest extends Fragment {
 
 		final MoviesListAdapter adapter = new MoviesListAdapter(inflater, movies, imageLoader);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Intent intent = new Intent(getContext(), ViewMovieActivity.class);
-				intent.putExtra("movie_id", movies.get(position).getId());
-				intent.putExtra("movie_title", movies.get(position).getTitle());
-				startActivity(intent);
-			}
+		listView.setOnItemClickListener((parent, view1, position, id) -> {
+			Intent intent = new Intent(getContext(), ViewMovieActivity.class);
+			intent.putExtra("movie_id", movies.get(position).getId());
+			intent.putExtra("movie_title", movies.get(position).getTitle());
+			startActivity(intent);
 		});
 
+		@SuppressLint("InflateParams")
 		final Button loadMore = (Button)inflater.inflate(R.layout.list_view_movies_footer, null);
 
-		loadMore.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				page = page + 1;
-				
-				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/discover", new Response.Listener<String>() {
-					@Override
-					public void onResponse(String response) {
-						try {
-							JSONObject jsonObject = new JSONObject(response);
-							if(!jsonObject.getBoolean("error")) {
-
-								JSONArray moviesJA = jsonObject.getJSONArray("movies");
-								if(moviesJA.length() > 0) {
-									for(int i = 0; i < moviesJA.length(); i++) {
-										JSONObject movieJO = moviesJA.getJSONObject(i);
-										JSONArray movieGenresJA = movieJO.getJSONArray("genres");
-
-										List<GenreInfo> genres = new ArrayList<>();
-
-										for(int j = 0; j < movieGenresJA.length(); j++) {
-											genres.add(new GenreInfo(
-												movieGenresJA.getJSONObject(j).getInt("id"),
-												movieGenresJA.getJSONObject(j).getString("name")
-											));
-										}
-
-										manolegeorge.watchlog.info.MovieInfo newMovie = new manolegeorge.watchlog.info.MovieInfo(movieJO.getInt("id"), movieJO.getString("title"));
-										newMovie.setReleaseDate(movieJO.getString("release_date"));
-										newMovie.setPoster(movieJO.getString("poster"));
-										newMovie.setGenres(genres);
-
-										movies.add(newMovie);
-
-									}
-									adapter.notifyDataSetChanged();
-								}
-							} else {
-								Toast.makeText(getContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-							}
-						} catch(JSONException e) {
-							Toast.makeText(getContext(), "JSONException", Toast.LENGTH_LONG).show();
-							Log.e("XYZ", e.getMessage());
-						}
-						loadMore.setClickable(true);
-					}
-				}, new Response.ErrorListener() {
-					@Override
-					public void onErrorResponse(VolleyError error) {
-						if(error instanceof TimeoutError) {
-							Toast.makeText(getContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-						} else if(error instanceof NetworkError) {
-							Toast.makeText(getContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-						} else {
-							Toast.makeText(getContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-						}
-						loadMore.setClickable(true);
-					}
-				}) {
-					@Override
-					protected Map<String, String> getParams() {
-						Map<String, String> params = new HashMap<>();
-						params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-						params.put("email_address", userSP.getString("email_address", "undefined"));
-						params.put("language", getResources().getConfiguration().locale.getLanguage());
-						params.put("password", userSP.getString("password", "undefined"));
-						params.put("page", String.valueOf(page));
-						return params;
-					}
-				};
-				stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-				loadMore.setClickable(false);
-				requestQueue.add(stringRequest2);
-
-			}
-		});
-
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/discover", new Response.Listener<String>() {
-
-			@Override
-			public void onResponse(String response) {
+		loadMore.setOnClickListener(v -> {
+			page = page + 1;
+			
+			StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/discover", response -> {
 				try {
-
 					JSONObject jsonObject = new JSONObject(response);
 					if(!jsonObject.getBoolean("error")) {
 
@@ -180,45 +98,109 @@ public class MoviesActivityFragmentLatest extends Fragment {
 									));
 								}
 
-								manolegeorge.watchlog.info.MovieInfo newMovie = new manolegeorge.watchlog.info.MovieInfo(movieJO.getInt("id"), movieJO.getString("title"));
+								MovieInfo newMovie = new MovieInfo(movieJO.getInt("id"), movieJO.getString("title"));
 								newMovie.setReleaseDate(movieJO.getString("release_date"));
 								newMovie.setPoster(movieJO.getString("poster"));
-								newMovie.setRating(movieJO.getDouble("rating"));
 								newMovie.setGenres(genres);
 
 								movies.add(newMovie);
 
 							}
 							adapter.notifyDataSetChanged();
-							listView.addFooterView(loadMore);
-							textView.setVisibility(View.GONE);
-							listView.setVisibility(View.VISIBLE);
 						}
-
 					} else {
-						textView.setText(jsonObject.getString("error_msg"));
+						Toast.makeText(getContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
+					}
+				} catch(JSONException e) {
+					Toast.makeText(getContext(), "JSONException", Toast.LENGTH_LONG).show();
+					Log.e("XYZ", e.getMessage());
+				}
+				loadMore.setClickable(true);
+			}, error -> {
+				if(error instanceof TimeoutError) {
+					Toast.makeText(getContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+				} else if(error instanceof NetworkError) {
+					Toast.makeText(getContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+				} else {
+					Toast.makeText(getContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+				}
+				loadMore.setClickable(true);
+			}) {
+				@Override
+				protected Map<String, String> getParams() {
+					Map<String, String> params = new HashMap<>();
+					params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
+					params.put("email_address", userSP.getString("email_address", "undefined"));
+					params.put("language", getResources().getConfiguration().getLocales().get(0).getLanguage());
+					params.put("password", userSP.getString("password", "undefined"));
+					params.put("page", String.valueOf(page));
+					return params;
+				}
+			};
+			stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+			loadMore.setClickable(false);
+			requestQueue.add(stringRequest2);
+
+		});
+
+		@SuppressLint("SetTextI18n")
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/discover", response -> {
+			try {
+
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
+
+					JSONArray moviesJA = jsonObject.getJSONArray("movies");
+					if(moviesJA.length() > 0) {
+						for(int i = 0; i < moviesJA.length(); i++) {
+							JSONObject movieJO = moviesJA.getJSONObject(i);
+							JSONArray movieGenresJA = movieJO.getJSONArray("genres");
+
+							List<GenreInfo> genres = new ArrayList<>();
+
+							for(int j = 0; j < movieGenresJA.length(); j++) {
+								genres.add(new GenreInfo(
+									movieGenresJA.getJSONObject(j).getInt("id"),
+									movieGenresJA.getJSONObject(j).getString("name")
+								));
+							}
+
+							MovieInfo newMovie = new MovieInfo(movieJO.getInt("id"), movieJO.getString("title"));
+							newMovie.setReleaseDate(movieJO.getString("release_date"));
+							newMovie.setPoster(movieJO.getString("poster"));
+							newMovie.setRating(movieJO.getDouble("rating"));
+							newMovie.setGenres(genres);
+
+							movies.add(newMovie);
+
+						}
+						adapter.notifyDataSetChanged();
+						listView.addFooterView(loadMore);
+						textView.setVisibility(View.GONE);
+						listView.setVisibility(View.VISIBLE);
 					}
 
-				} catch(JSONException e) {
-					textView.setText("JSONException");
-					e.printStackTrace();
-				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if(error instanceof TimeoutError) {
-					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if(error instanceof NetworkError) {
-					textView.setText(getResources().getString(R.string.no_internet_connection));
 				} else {
-					textView.setText(getResources().getString(R.string.error));
+					textView.setText(jsonObject.getString("error_msg"));
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+
+			} catch(JSONException e) {
+				textView.setText("JSONException");
+				e.printStackTrace();
 			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, error -> {
+			if(error instanceof TimeoutError) {
+				textView.setText(getResources().getString(R.string.weak_internet_connection));
+			} else if(error instanceof NetworkError) {
+				textView.setText(getResources().getString(R.string.no_internet_connection));
+			} else {
+				textView.setText(getResources().getString(R.string.error));
+			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
 		}) {
 			@Override
 			protected Map<String, String> getParams() {

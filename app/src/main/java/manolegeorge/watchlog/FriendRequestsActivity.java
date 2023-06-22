@@ -24,7 +24,6 @@ import androidx.appcompat.widget.Toolbar;
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
-import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -46,12 +45,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import manolegeorge.watchlog.info.FriendRequestInfo;
 import manolegeorge.watchlog.info.UserInfo;
-
-@SuppressLint({"InflateParams", "SetTextI18n"})
-@SuppressWarnings("ConstantConditions")
 
 public class FriendRequestsActivity extends AppCompatActivity {
 
@@ -65,7 +62,8 @@ public class FriendRequestsActivity extends AppCompatActivity {
 
     List<FriendRequestInfo> friendRequests = new ArrayList<>();
 
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
@@ -73,7 +71,7 @@ public class FriendRequestsActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
         setTitle(getResources().getString(R.string.friend_requests));
 
@@ -98,51 +96,49 @@ public class FriendRequestsActivity extends AppCompatActivity {
         adapter = new ListAdapter(imageLoader, inflater, requestQueue, friendRequests);
         listView.setAdapter(adapter);
 
-        StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/friends/requests", new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
+        @SuppressLint("SetTextI18n")
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/friends/requests", response -> {
+			try {
 
-                    JSONObject jsonObject = new JSONObject(response);
-                    if(!jsonObject.getBoolean("error")) {
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
 
-                        JSONArray friendRequestsJA = jsonObject.getJSONArray("friend_requests");
-                        if(friendRequestsJA.length() > 0) {
-                            for(int i = 0; i < friendRequestsJA.length(); i++) {
+					JSONArray friendRequestsJA = jsonObject.getJSONArray("friend_requests");
+					if(friendRequestsJA.length() > 0) {
+						for(int i = 0; i < friendRequestsJA.length(); i++) {
 
-                                JSONObject friendRequestJO = friendRequestsJA.getJSONObject(i);
-                                JSONObject userDataJO = friendRequestJO.getJSONObject("user_data");
+							JSONObject friendRequestJO = friendRequestsJA.getJSONObject(i);
+							JSONObject userDataJO = friendRequestJO.getJSONObject("user_data");
 
-                                UserInfo userInfo = new UserInfo(userDataJO.getInt("id"));
-                                userInfo.setProfilePicture(userDataJO.getString("profile_picture"));
-                                userInfo.setUsername(userDataJO.getString("username"));
+							UserInfo userInfo = new UserInfo(userDataJO.getInt("id"));
+							userInfo.setProfilePicture(userDataJO.getString("profile_picture"));
+							userInfo.setUsername(userDataJO.getString("username"));
 
-                                FriendRequestInfo newFriendRequest = new FriendRequestInfo(friendRequestJO.getInt("id"), friendRequestJO.getLong("timestamp"), userInfo);
+							FriendRequestInfo newFriendRequest = new FriendRequestInfo(friendRequestJO.getInt("id"), friendRequestJO.getLong("timestamp"), userInfo);
 
-                                friendRequests.add(newFriendRequest);
+							friendRequests.add(newFriendRequest);
 
-                            }
-                            adapter.notifyDataSetChanged();
-                            textView.setVisibility(View.GONE);
-                            listView.setVisibility(View.VISIBLE);
-                        }
+						}
+						adapter.notifyDataSetChanged();
+						textView.setVisibility(View.GONE);
+						listView.setVisibility(View.VISIBLE);
+					}
 
-                    } else {
-                        textView.setText(jsonObject.getString("error_msg"));
-                    }
+				} else {
+					textView.setText(jsonObject.getString("error_msg"));
+				}
 
-                } catch(JSONException e) {
-                    textView.setText("JSONException");
-                }
-                WatchLog.Utils.fadeOut(loading);
-                WatchLog.Utils.fadeIn(content);
-            }
-        }, new Response.ErrorListener() {
+			} catch(JSONException e) {
+				textView.setText("JSONException");
+			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 if(error instanceof TimeoutError) {
                     textView.setText(getResources().getString(R.string.weak_internet_connection));
-                } else if(error instanceof NoConnectionError || error instanceof NetworkError) {
+                } else if(error instanceof NetworkError) {
                     textView.setText(getResources().getString(R.string.no_internet_connection));
                 } else {
                     textView.setText(getResources().getString(R.string.error));
@@ -175,11 +171,10 @@ public class FriendRequestsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-        }
+		if (item.getItemId() == android.R.id.home) {
+			finish();
+			return true;
+		}
         return super.onOptionsItemSelected(item);
     }
 

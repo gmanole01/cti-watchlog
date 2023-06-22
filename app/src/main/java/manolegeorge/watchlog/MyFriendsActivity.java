@@ -5,20 +5,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,15 +21,11 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
-import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -70,6 +61,7 @@ public class MyFriendsActivity extends AppCompatActivity {
 
 	List<FriendInfo> friends = new ArrayList<>();
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -116,65 +108,60 @@ public class MyFriendsActivity extends AppCompatActivity {
 		});
 		*/
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/friends/all", new Response.Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				try {
+		@SuppressLint("NotifyDataSetChanged")
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/friends/all", response -> {
+			try {
 
-					JSONObject jsonObject = new JSONObject(response);
-					if(!jsonObject.getBoolean("error")) {
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
 
-						JSONArray friendsJA = jsonObject.getJSONArray("friends");
-						if(friendsJA.length() > 0) {
-							for(int i = 0; i < friendsJA.length(); i++) {
-								JSONObject friendJO = friendsJA.getJSONObject(i);
-								JSONObject userDataJO = friendJO.getJSONObject("user_data");
+					JSONArray friendsJA = jsonObject.getJSONArray("friends");
+					if(friendsJA.length() > 0) {
+						for(int i = 0; i < friendsJA.length(); i++) {
+							JSONObject friendJO = friendsJA.getJSONObject(i);
+							JSONObject userDataJO = friendJO.getJSONObject("user_data");
 
-								UserInfo userInfo = new UserInfo(userDataJO.getInt("id"));
-								userInfo.setProfilePicture(userDataJO.getString("profile_picture"));
-								userInfo.setUsername(userDataJO.getString("username"));
+							UserInfo userInfo = new UserInfo(userDataJO.getInt("id"));
+							userInfo.setProfilePicture(userDataJO.getString("profile_picture"));
+							userInfo.setUsername(userDataJO.getString("username"));
 
-								FriendInfo newFriend = new FriendInfo(friendJO.getInt("id"), friendJO.getLong("timestamp"), userInfo);
+							FriendInfo newFriend = new FriendInfo(friendJO.getInt("id"), friendJO.getLong("timestamp"), userInfo);
 
-								friends.add(newFriend);
+							friends.add(newFriend);
 
-							}
-							adapter.notifyDataSetChanged();
-							textView.setVisibility(View.GONE);
-							recyclerView.setVisibility(View.VISIBLE);
-							content.setGravity(Gravity.TOP);
 						}
-
-					} else {
-						textView.setText(jsonObject.getString("error_msg"));
+						adapter.notifyDataSetChanged();
+						textView.setVisibility(View.GONE);
+						recyclerView.setVisibility(View.VISIBLE);
+						content.setGravity(Gravity.TOP);
 					}
 
-				} catch(JSONException e) {
-					textView.setText("JSONException");
-					e.printStackTrace();
-				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if(error instanceof TimeoutError) {
-					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-					textView.setText(getResources().getString(R.string.no_internet_connection));
 				} else {
-					textView.setText(getResources().getString(R.string.error));
+					textView.setText(jsonObject.getString("error_msg"));
 				}
-				
-				error.printStackTrace();
-				
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+
+			} catch(JSONException e) {
+				textView.setText("JSONException");
+				e.printStackTrace();
 			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, error -> {
+			if(error instanceof TimeoutError) {
+				textView.setText(getResources().getString(R.string.weak_internet_connection));
+			} else if(error instanceof NetworkError) {
+				textView.setText(getResources().getString(R.string.no_internet_connection));
+			} else {
+				textView.setText(getResources().getString(R.string.error));
+			}
+			
+			error.printStackTrace();
+			
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
 		}) {
 			@Override
-			public Map<String, String> getHeaders() throws AuthFailureError {
+			public Map<String, String> getHeaders() {
 				Map<String, String> headers = new HashMap<>();
 				headers.put("Accept", "application/json");
 				headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
@@ -188,8 +175,7 @@ public class MyFriendsActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case android.R.id.home:
+		if (item.getItemId() == android.R.id.home) {
 			finish();
 			return true;
 		}

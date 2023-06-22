@@ -1,9 +1,9 @@
 package manolegeorge.watchlog;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -13,7 +13,6 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.provider.MediaStore;
 import android.view.MenuItem;
-import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,8 +24,6 @@ import androidx.appcompat.widget.Toolbar;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -41,8 +38,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings("deprecation")
 
 public class AccountSettingsActivity extends AppCompatActivity {
 
@@ -63,7 +61,7 @@ public class AccountSettingsActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
         setTitle(getResources().getString(R.string.account_settings));
 
@@ -89,49 +87,43 @@ public class AccountSettingsActivity extends AppCompatActivity {
         username.setText(userSP.getString("username", "undefined"));
         emailAddress.setText(userSP.getString("email_address", "undefined"));
 
-        profilePicture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        profilePicture.setOnClickListener(view -> {
 
-                String[] items = {
-                    getResources().getString(R.string.change_profile_picture),
-                    getResources().getString(R.string.view_profile_picture)
-                };
+			String[] items = {
+				getResources().getString(R.string.change_profile_picture),
+				getResources().getString(R.string.view_profile_picture)
+			};
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(AccountSettingsActivity.this);
-                builder.setItems(items, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int position) {
-                        if(position == 0) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(AccountSettingsActivity.this);
+			builder.setItems(items, (dialogInterface, position) -> {
+				if(position == 0) {
 
-                            Intent intent = new Intent();
-                            intent.setType("image/*");
-                            intent.setAction(Intent.ACTION_GET_CONTENT);
-                            startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
+					Intent intent = new Intent();
+					intent.setType("image/*");
+					intent.setAction(Intent.ACTION_GET_CONTENT);
+					startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
 
-                        } else if(position == 1) {
-                          startActivity(new Intent(AccountSettingsActivity.this, ViewProfilePictureActivity.class));
-                        }
-                    }
-                });
-                builder.create().show();
+				} else if(position == 1) {
+				  startActivity(new Intent(AccountSettingsActivity.this, ViewProfilePictureActivity.class));
+				}
+			});
+			builder.create().show();
 
-            }
-        });
+		});
 
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-        }
+		if (item.getItemId() == android.R.id.home) {
+			finish();
+			return true;
+		}
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
+    @SuppressLint("MissingSuperCall")
+	@Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == 1) {
@@ -147,38 +139,32 @@ public class AccountSettingsActivity extends AppCompatActivity {
                             final String base64 = WatchLog.bitmapToBase64(bitmap, extension);
                             if(base64 != null) {
         
-                                StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/account/picture/new", new Response.Listener<String>() {
-                                    @Override
-                                    public void onResponse(String response) {
-                                        progressDialog.dismiss();
-                                        try {
-                                            JSONObject jsonObject = new JSONObject(response);
-                                            if(!jsonObject.getBoolean("error")) {
-                        
-                                                String nProfilePicture = jsonObject.getJSONObject("data").getString("url");
-                        
-                                                SharedPreferences.Editor userSPEditor = userSP.edit();
-                                                userSPEditor.putString("profile_picture", nProfilePicture);
-                                                userSPEditor.apply();
-                        
-                                                imageLoader.displayImage(WatchLog.Utils.getProfilePicture(userSP), profilePictureIA, WatchLog.getImageLoaderOptions());
-                        
-                                            } else {
-                                                Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-                                            }
-                                        } catch(JSONException e) {
-                                            e.printStackTrace();
-                                            Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
-                                        }
-                                    }
-                                }, new Response.ErrorListener() {
-                                    @Override
-                                    public void onErrorResponse(VolleyError error) {
-                                        error.printStackTrace();
-                                        progressDialog.dismiss();
-                                        Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-                                    }
-                                }) {
+                                StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/account/picture/new", response -> {
+									progressDialog.dismiss();
+									try {
+										JSONObject jsonObject = new JSONObject(response);
+										if(!jsonObject.getBoolean("error")) {
+					
+											String nProfilePicture = jsonObject.getJSONObject("data").getString("url");
+					
+											SharedPreferences.Editor userSPEditor = userSP.edit();
+											userSPEditor.putString("profile_picture", nProfilePicture);
+											userSPEditor.apply();
+					
+											imageLoader.displayImage(WatchLog.Utils.getProfilePicture(userSP), profilePictureIA, WatchLog.getImageLoaderOptions());
+					
+										} else {
+											Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
+										}
+									} catch(JSONException e) {
+										e.printStackTrace();
+										Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
+									}
+								}, error -> {
+									error.printStackTrace();
+									progressDialog.dismiss();
+									Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+								}) {
                                     @Override
                                     protected Map<String, String> getParams() {
                                         Map<String, String> params = new HashMap<>();

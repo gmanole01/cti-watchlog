@@ -4,8 +4,8 @@ package manolegeorge.watchlog.info;
 
 public class TVShowInfo {
 
-	private int id;
-	private String name;
+	private final int id;
+	private final String name;
 
 	private String poster = "";
 

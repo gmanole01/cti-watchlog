@@ -1,14 +1,11 @@
 package manolegeorge.watchlog.info;
 
-import java.util.ArrayList;
 import java.util.List;
-
-@SuppressWarnings("unused")
 
 public class MovieInfo {
 
-	private int id;
-	private String title;
+	private final int id;
+	private final String title;
 
 	private String releaseDate = "00-00-0000";
 

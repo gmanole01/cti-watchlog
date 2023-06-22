@@ -15,47 +15,45 @@ import java.util.List;
 import manolegeorge.watchlog.R;
 import manolegeorge.watchlog.info.MovieInfo;
 
-@SuppressWarnings("ALL")
-
 public class MoviesListAdapter extends BaseAdapter {
-
-	private LayoutInflater inflater;
-	private List<MovieInfo> movies;
-	private ImageLoader imageLoader;
-	private DisplayImageOptions options;
-
+	
+	private final LayoutInflater inflater;
+	private final List<MovieInfo> movies;
+	private final ImageLoader imageLoader;
+	private final DisplayImageOptions options;
+	
 	public MoviesListAdapter(LayoutInflater inflater, List<MovieInfo> movies, ImageLoader imageLoader) {
 		this.inflater = inflater;
 		this.movies = movies;
 		this.imageLoader = imageLoader;
 		this.options = new DisplayImageOptions.Builder()
-			.showImageOnLoading(R.drawable.no_poster)
-			.showImageForEmptyUri(R.drawable.no_poster)
-			.showImageOnFail(R.drawable.no_poster)
-			.cacheInMemory(false)
-			.cacheOnDisk(true)
-			.build();
+				.showImageOnLoading(R.drawable.no_poster)
+				.showImageForEmptyUri(R.drawable.no_poster)
+				.showImageOnFail(R.drawable.no_poster)
+				.cacheInMemory(false)
+				.cacheOnDisk(true)
+				.build();
 	}
-
+	
 	@Override
 	public int getCount() {
 		return movies.size();
 	}
-
+	
 	@Override
 	public MovieInfo getItem(int position) {
 		return movies.get(position);
 	}
-
+	
 	@Override
 	public long getItemId(int position) {
 		return position;
 	}
-
+	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ViewHolder holder;
-		if(convertView == null) {
+		if (convertView == null) {
 			convertView = inflater.inflate(R.layout.list_view_movies, parent, false);
 			holder = new ViewHolder();
 			holder.poster = convertView.findViewById(R.id.poster);
@@ -65,7 +63,7 @@ public class MoviesListAdapter extends BaseAdapter {
 			holder.rating = convertView.findViewById(R.id.rating);
 			convertView.setTag(holder);
 		} else {
-			holder = (ViewHolder)convertView.getTag();
+			holder = (ViewHolder) convertView.getTag();
 		}
 		imageLoader.displayImage(movies.get(position).getPoster(), holder.poster, this.options);
 		holder.title.setText(movies.get(position).getTitle());
@@ -74,13 +72,13 @@ public class MoviesListAdapter extends BaseAdapter {
 		holder.rating.setText(String.valueOf(movies.get(position).getRating()));
 		return convertView;
 	}
-
-	public class ViewHolder {
+	
+	public static class ViewHolder {
 		public ImageView poster;
 		public TextView title;
 		public TextView genres;
 		public TextView releaseDate;
 		public TextView rating;
 	}
-
+	
 }

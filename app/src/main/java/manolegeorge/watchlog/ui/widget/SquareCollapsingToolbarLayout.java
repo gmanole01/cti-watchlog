@@ -5,6 +5,7 @@ import android.util.AttributeSet;
 
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 
+@SuppressWarnings("SuspiciousNameCombination")
 public class SquareCollapsingToolbarLayout extends CollapsingToolbarLayout {
 	public SquareCollapsingToolbarLayout(Context context) {
 		super(context);

@@ -24,6 +24,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("ConstantConditions")
 public class ViewUserProfileActivity extends AppCompatActivity {
 
 	private int userId;
@@ -60,42 +61,36 @@ public class ViewUserProfileActivity extends AppCompatActivity {
 		final LinearLayout content = findViewById(R.id.content);
 		final LinearLayout loading = findViewById(R.id.loading);
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_user_data", new Response.Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				try {
-					JSONObject jsonObject = new JSONObject(response);
-					if(!jsonObject.getBoolean("error")) {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_user_data", response -> {
+			try {
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
 
-						imageLoader.displayImage(jsonObject.getJSONObject("data").getString("profile_picture"), profilePicture, new DisplayImageOptions.Builder()
-							.showImageForEmptyUri(R.drawable.no_backdrop_16_9)
-							.showImageOnLoading(R.drawable.no_backdrop_16_9)
-							.showImageOnFail(R.drawable.no_backdrop_16_9)
-							.displayer(new FadeInBitmapDisplayer(500))
-							.cacheInMemory(false)
-							.cacheOnDisk(true)
-							.build());
+					imageLoader.displayImage(jsonObject.getJSONObject("data").getString("profile_picture"), profilePicture, new DisplayImageOptions.Builder()
+						.showImageForEmptyUri(R.drawable.no_backdrop_16_9)
+						.showImageOnLoading(R.drawable.no_backdrop_16_9)
+						.showImageOnFail(R.drawable.no_backdrop_16_9)
+						.displayer(new FadeInBitmapDisplayer(500))
+						.cacheInMemory(false)
+						.cacheOnDisk(true)
+						.build());
 
-					} else {
-						Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-					}
-				} catch(JSONException e) {
-					Toast.makeText(getApplicationContext(), "JSONException", Toast.LENGTH_LONG).show();
-				}
-				content.setVisibility(View.VISIBLE);
-				WatchLog.Utils.fadeOut(loading);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				WatchLog.Utils.fadeOut(loading);
-				if(error instanceof TimeoutError) {
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
 				} else {
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 				}
+			} catch(JSONException e) {
+				Toast.makeText(getApplicationContext(), "JSONException", Toast.LENGTH_LONG).show();
+			}
+			content.setVisibility(View.VISIBLE);
+			WatchLog.Utils.fadeOut(loading);
+		}, error -> {
+			WatchLog.Utils.fadeOut(loading);
+			if(error instanceof TimeoutError) {
+				Toast.makeText(getApplicationContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+			} else if(error instanceof NetworkError) {
+				Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+			} else {
+				Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
 			}
 		}) {
 			@Override
@@ -103,7 +98,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
 				Map<String, String> params = new HashMap<>();
 				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
 				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("language", getResources().getConfiguration().locale.getLanguage());
+				params.put("language", getResources().getConfiguration().getLocales().get(0).getLanguage());
 				params.put("password", userSP.getString("password", "undefined"));
 				params.put("user_id", String.valueOf(userId));
 				return params;

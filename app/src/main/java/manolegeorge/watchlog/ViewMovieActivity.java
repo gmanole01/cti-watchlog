@@ -1,5 +1,6 @@
 package manolegeorge.watchlog;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,14 +20,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -115,116 +113,101 @@ public class ViewMovieActivity extends AppCompatActivity {
 		overview = findViewById(R.id.overview);
 		poster = findViewById(R.id.poster);
 		
-		myRating.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-			@Override
-			public void onRatingChanged(RatingBar ratingBar, final float rating, boolean fromUser) {
-				if (!isSendingRating) {
-					
-					StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/rate_movie", new Response.Listener<String>() {
-						@Override
-						public void onResponse(String response) {
-							Log.d("TWAYS", response);
-							try {
-								JSONObject jsonObject = new JSONObject(response);
-								if (jsonObject.getBoolean("error")) {
-									Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-								}
-							} catch (JSONException e) {
-								Toast.makeText(getApplicationContext(), "JSONException", Toast.LENGTH_LONG).show();
-							}
-							isSendingRating = false;
-							myRating.setEnabled(true);
+		myRating.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+			if (!isSendingRating) {
+				
+				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/rate_movie", response -> {
+					Log.d("TWAYS", response);
+					try {
+						JSONObject jsonObject = new JSONObject(response);
+						if (jsonObject.getBoolean("error")) {
+							Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 						}
-					}, new Response.ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							if (error instanceof TimeoutError) {
-								Toast.makeText(getApplicationContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-							} else if (error instanceof NetworkError) {
-								Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-							} else {
-								Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-							}
-							isSendingRating = false;
-							myRating.setEnabled(true);
-						}
-					}) {
-						@Override
-						protected Map<String, String> getParams() {
-							Map<String, String> params = new HashMap<>();
-							params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-							params.put("email_address", userSP.getString("email_address", "undefined"));
-							params.put("movie_id", String.valueOf(movieId));
-							params.put("password", userSP.getString("password", "undefined"));
-							params.put("rating", String.valueOf(rating));
-							return params;
-						}
-					};
-					
-					myRating.setEnabled(false);
-					isSendingRating = true;
-					requestQueue.add(stringRequest2);
-					
-				}
+					} catch (JSONException e) {
+						Toast.makeText(getApplicationContext(), "JSONException", Toast.LENGTH_LONG).show();
+					}
+					isSendingRating = false;
+					myRating.setEnabled(true);
+				}, error -> {
+					if (error instanceof TimeoutError) {
+						Toast.makeText(getApplicationContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+					} else if (error instanceof NetworkError) {
+						Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+					} else {
+						Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+					}
+					isSendingRating = false;
+					myRating.setEnabled(true);
+				}) {
+					@Override
+					protected Map<String, String> getParams() {
+						Map<String, String> params = new HashMap<>();
+						params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
+						params.put("email_address", userSP.getString("email_address", "undefined"));
+						params.put("movie_id", String.valueOf(movieId));
+						params.put("password", userSP.getString("password", "undefined"));
+						params.put("rating", String.valueOf(rating));
+						return params;
+					}
+				};
+				
+				myRating.setEnabled(false);
+				isSendingRating = true;
+				requestQueue.add(stringRequest2);
+				
 			}
 		});
 		
-		StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/get/" + movieId, new Response.Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				try {
-					JSONObject jsonObject = new JSONObject(response);
-					if (!jsonObject.getBoolean("error")) {
-						
-						JSONObject dataJO = jsonObject.getJSONObject("data");
-						
-						MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
-						Movie movie = movieDao.getByApiId(movieId);
-						if (movie == null) {
-							movie = new Movie();
-						}
-						movie.api_id = movieId;
-						movie.title = movieTitle;
-						movie.backdrop = dataJO.getString("backdrop");
-						movie.poster = dataJO.getString("poster_small");
-						movie.title = dataJO.getString("title");
-						movie.runtime = dataJO.getInt("runtime");
-						movie.budget = dataJO.getInt("budget");
-						movie.revenue = dataJO.getInt("revenue");
-						movie.overview = dataJO.getString("overview");
-						movie.rating = dataJO.getDouble("rating");
-						movie.release_date = dataJO.getString("release_date");
-						movieDao.insert(movie);
-						
-						updateMovieInfo(movie);
-					} else {
-						if (jsonObject.getString("error_id").equals("movie_not_found"))
-							finish();
-						Toast.makeText(ViewMovieActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
+		StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/get/" + movieId, response -> {
+			try {
+				JSONObject jsonObject = new JSONObject(response);
+				if (!jsonObject.getBoolean("error")) {
+					
+					JSONObject dataJO = jsonObject.getJSONObject("data");
+					
+					MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
+					Movie movie = movieDao.getByApiId(movieId);
+					if (movie == null) {
+						movie = new Movie();
 					}
-				} catch (JSONException e) {
-					Log.d("TWAYS", response);
-					Log.d("TWAYS", e.toString());
-					Toast.makeText(ViewMovieActivity.this, "JSONException", Toast.LENGTH_LONG).show();
+					movie.api_id = movieId;
+					movie.title = movieTitle;
+					movie.backdrop = dataJO.getString("backdrop");
+					movie.poster = dataJO.getString("poster_small");
+					movie.title = dataJO.getString("title");
+					movie.runtime = dataJO.getInt("runtime");
+					movie.budget = dataJO.getInt("budget");
+					movie.revenue = dataJO.getInt("revenue");
+					movie.overview = dataJO.getString("overview");
+					movie.rating = dataJO.getDouble("rating");
+					movie.release_date = dataJO.getString("release_date");
+					movieDao.insert(movie);
+					
+					updateMovieInfo(movie);
+				} else {
+					if (jsonObject.getString("error_id").equals("movie_not_found"))
+						finish();
+					Toast.makeText(ViewMovieActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+			} catch (JSONException e) {
+				Log.d("TWAYS", response);
+				Log.d("TWAYS", e.toString());
+				Toast.makeText(ViewMovieActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (error instanceof NetworkError) {
-					Movie movie = AppDatabase.getInstance(getApplicationContext()).movieDao().getByApiId(movieId);
-					if (movie != null) {
-						updateMovieInfo(movie);
-						WatchLog.Utils.fadeOut(loading);
-						WatchLog.Utils.fadeIn(content);
-						return;
-					}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, error -> {
+			if (error instanceof NetworkError) {
+				Movie movie = AppDatabase.getInstance(getApplicationContext()).movieDao().getByApiId(movieId);
+				if (movie != null) {
+					updateMovieInfo(movie);
+					WatchLog.Utils.fadeOut(loading);
+					WatchLog.Utils.fadeIn(content);
+					return;
 				}
-				WatchLog.Utils.fadeOut(loading, 200);
-				Toast.makeText(ViewMovieActivity.this, error.toString(), Toast.LENGTH_LONG).show();
 			}
+			WatchLog.Utils.fadeOut(loading, 200);
+			Toast.makeText(ViewMovieActivity.this, error.toString(), Toast.LENGTH_LONG).show();
 		}) {
 			@Override
 			protected Map<String, String> getParams() {
@@ -291,6 +274,7 @@ public class ViewMovieActivity extends AppCompatActivity {
 		return true;
 	}
 	
+	@SuppressLint("NonConstantResourceId")
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -390,7 +374,7 @@ public class ViewMovieActivity extends AppCompatActivity {
 					}
 					
 					@Override
-					public Map<String, String> getHeaders() throws AuthFailureError {
+					public Map<String, String> getHeaders() {
 						Map<String, String> headers = new HashMap<>();
 						headers.put("Accept", "application/json");
 						headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));

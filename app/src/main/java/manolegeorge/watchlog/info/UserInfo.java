@@ -1,10 +1,8 @@
 package manolegeorge.watchlog.info;
 
-@SuppressWarnings("ALL")
-
 public class UserInfo {
 
-	private int id;
+	private final int id;
 	private String profilePicture = null;
 	private String username = "undefined";
 

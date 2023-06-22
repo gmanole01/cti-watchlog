@@ -23,7 +23,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONException;
@@ -32,7 +31,6 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings("deprecation")
 
 public class LoginActivity extends AppCompatActivity {
 	
@@ -46,6 +44,7 @@ public class LoginActivity extends AppCompatActivity {
 	
 	private RequestQueue requestQueue;
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -170,7 +169,7 @@ public class LoginActivity extends AppCompatActivity {
 				Map<String, String> params = new HashMap<>();
 				params.put("email", emailAddress);
 				params.put("fcm_token", fcmToken);
-				params.put("language", getResources().getConfiguration().locale.getLanguage());
+				params.put("language", getResources().getConfiguration().getLocales().get(0).getLanguage());
 				params.put("password", password);
 				return params;
 			}

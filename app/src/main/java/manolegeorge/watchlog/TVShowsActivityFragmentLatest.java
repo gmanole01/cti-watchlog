@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressLint({"InflateParams", "SetTextI18n"})
-@SuppressWarnings({"ConstantConditions", "deprecation"})
+@SuppressWarnings({"ConstantConditions"})
 
 public class TVShowsActivityFragmentLatest extends Fragment {
 
@@ -65,107 +65,26 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 
 		final MoviesListAdapter adapter = new MoviesListAdapter(inflater, tvShows, imageLoader);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Intent intent = new Intent(getContext(), ViewTVShowActivity.class);
-				intent.putExtra("tv_show_id", tvShows.get(position).getId());
-				intent.putExtra("tv_show_name", tvShows.get(position).getTitle());
-				startActivity(intent);
-			}
+		listView.setOnItemClickListener((parent, view1, position, id) -> {
+			Intent intent = new Intent(getContext(), ViewTVShowActivity.class);
+			intent.putExtra("tv_show_id", tvShows.get(position).getId());
+			intent.putExtra("tv_show_name", tvShows.get(position).getTitle());
+			startActivity(intent);
 		});
 
 		final Button loadMore = (Button)inflater.inflate(R.layout.list_view_movies_footer, null);
 
-		loadMore.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				page = page + 1;
+		loadMore.setOnClickListener(v -> {
+			page = page + 1;
 
-				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/discover", new Response.Listener<String>() {
-					@Override
-					public void onResponse(String response) {
-						try {
-							JSONObject jsonObject = new JSONObject(response);
-							if(!jsonObject.getBoolean("error")) {
-
-								JSONArray moviesJA = jsonObject.getJSONArray("tv_shows");
-								if(moviesJA.length() > 0) {
-									for(int i = 0; i < moviesJA.length(); i++) {
-										JSONObject movieJO = moviesJA.getJSONObject(i);
-										JSONArray movieGenresJA = movieJO.getJSONArray("genres");
-
-										List<GenreInfo> genres = new ArrayList<>();
-
-										for(int j = 0; j < movieGenresJA.length(); j++) {
-											genres.add(new GenreInfo(
-												movieGenresJA.getJSONObject(j).getInt("id"),
-												movieGenresJA.getJSONObject(j).getString("name")
-											));
-										}
-
-										manolegeorge.watchlog.info.MovieInfo newMovie = new manolegeorge.watchlog.info.MovieInfo(movieJO.getInt("id"), movieJO.getString("name"));
-										newMovie.setReleaseDate(movieJO.getString("air_date"));
-										newMovie.setPoster(movieJO.getString("poster"));
-										newMovie.setRating(movieJO.getDouble("rating"));
-										newMovie.setGenres(genres);
-
-										tvShows.add(newMovie);
-
-									}
-									adapter.notifyDataSetChanged();
-								}
-
-							} else {
-								Toast.makeText(getContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-							}
-						} catch(JSONException e) {
-							Toast.makeText(getContext(), e.toString(), Toast.LENGTH_LONG).show();
-						}
-						loadMore.setClickable(true);
-					}
-				}, new Response.ErrorListener() {
-					@Override
-					public void onErrorResponse(VolleyError error) {
-						error.printStackTrace();
-						if(error instanceof TimeoutError) {
-							Toast.makeText(getContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-						} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-							Toast.makeText(getContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-						} else {
-							Toast.makeText(getContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-						}
-						loadMore.setClickable(true);
-					}
-				}) {
-					@Override
-					protected Map<String, String> getParams() {
-						Map<String, String> params = new HashMap<>();
-						params.put("page", String.valueOf(page));
-						return params;
-					}
-				};
-				stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-				loadMore.setClickable(false);
-				requestQueue.add(stringRequest2);
-
-			}
-		});
-
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/discover", new Response.Listener<String>() {
-
-			@Override
-			public void onResponse(String response) {
+			StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/discover", response -> {
 				try {
-
 					JSONObject jsonObject = new JSONObject(response);
 					if(!jsonObject.getBoolean("error")) {
 
 						JSONArray moviesJA = jsonObject.getJSONArray("tv_shows");
 						if(moviesJA.length() > 0) {
 							for(int i = 0; i < moviesJA.length(); i++) {
-
 								JSONObject movieJO = moviesJA.getJSONObject(i);
 								JSONArray movieGenresJA = movieJO.getJSONArray("genres");
 
@@ -178,7 +97,7 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 									));
 								}
 
-								manolegeorge.watchlog.info.MovieInfo newMovie = new manolegeorge.watchlog.info.MovieInfo(movieJO.getInt("id"), movieJO.getString("name"));
+								MovieInfo newMovie = new MovieInfo(movieJO.getInt("id"), movieJO.getString("name"));
 								newMovie.setReleaseDate(movieJO.getString("air_date"));
 								newMovie.setPoster(movieJO.getString("poster"));
 								newMovie.setRating(movieJO.getDouble("rating"));
@@ -188,36 +107,98 @@ public class TVShowsActivityFragmentLatest extends Fragment {
 
 							}
 							adapter.notifyDataSetChanged();
-							listView.addFooterView(loadMore);
-							textView.setVisibility(View.GONE);
-							listView.setVisibility(View.VISIBLE);
 						}
 
 					} else {
-						textView.setText(jsonObject.getString("error_msg"));
+						Toast.makeText(getContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 					}
-
 				} catch(JSONException e) {
-					e.printStackTrace();
-					textView.setText("JSONException");
+					Toast.makeText(getContext(), e.toString(), Toast.LENGTH_LONG).show();
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
+				loadMore.setClickable(true);
+			}, error -> {
 				error.printStackTrace();
 				if(error instanceof TimeoutError) {
-					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-					textView.setText(getResources().getString(R.string.no_internet_connection));
+					Toast.makeText(getContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+				} else if(error instanceof NetworkError) {
+					Toast.makeText(getContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
 				} else {
-					textView.setText(getResources().getString(R.string.error));
+					Toast.makeText(getContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+				loadMore.setClickable(true);
+			}) {
+				@Override
+				protected Map<String, String> getParams() {
+					Map<String, String> params = new HashMap<>();
+					params.put("page", String.valueOf(page));
+					return params;
+				}
+			};
+			stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+			loadMore.setClickable(false);
+			requestQueue.add(stringRequest2);
+
+		});
+
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/discover", response -> {
+			try {
+
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
+
+					JSONArray moviesJA = jsonObject.getJSONArray("tv_shows");
+					if(moviesJA.length() > 0) {
+						for(int i = 0; i < moviesJA.length(); i++) {
+
+							JSONObject movieJO = moviesJA.getJSONObject(i);
+							JSONArray movieGenresJA = movieJO.getJSONArray("genres");
+
+							List<GenreInfo> genres = new ArrayList<>();
+
+							for(int j = 0; j < movieGenresJA.length(); j++) {
+								genres.add(new GenreInfo(
+									movieGenresJA.getJSONObject(j).getInt("id"),
+									movieGenresJA.getJSONObject(j).getString("name")
+								));
+							}
+
+							MovieInfo newMovie = new MovieInfo(movieJO.getInt("id"), movieJO.getString("name"));
+							newMovie.setReleaseDate(movieJO.getString("air_date"));
+							newMovie.setPoster(movieJO.getString("poster"));
+							newMovie.setRating(movieJO.getDouble("rating"));
+							newMovie.setGenres(genres);
+
+							tvShows.add(newMovie);
+
+						}
+						adapter.notifyDataSetChanged();
+						listView.addFooterView(loadMore);
+						textView.setVisibility(View.GONE);
+						listView.setVisibility(View.VISIBLE);
+					}
+
+				} else {
+					textView.setText(jsonObject.getString("error_msg"));
+				}
+
+			} catch(JSONException e) {
+				e.printStackTrace();
+				textView.setText("JSONException");
 			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, error -> {
+			error.printStackTrace();
+			if(error instanceof TimeoutError) {
+				textView.setText(getResources().getString(R.string.weak_internet_connection));
+			} else if(error instanceof NetworkError) {
+				textView.setText(getResources().getString(R.string.no_internet_connection));
+			} else {
+				textView.setText(getResources().getString(R.string.error));
+			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
 		});
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 

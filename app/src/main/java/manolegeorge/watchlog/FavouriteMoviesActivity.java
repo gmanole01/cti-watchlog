@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import manolegeorge.watchlog.db.AppDatabase;
 import manolegeorge.watchlog.db.Movie;
@@ -50,100 +51,100 @@ import manolegeorge.watchlog.db.MovieDao;
 import manolegeorge.watchlog.info.MovieInfo;
 import manolegeorge.watchlog.info.WatchedMovieInfo;
 
-@SuppressLint({"InflateParams", "SetTextI18n"})
-@SuppressWarnings("ConstantConditions")
 
 public class FavouriteMoviesActivity extends AppCompatActivity {
-
+	
 	int totalMovies = 0;
 	int loadedMovies = 0;
 	int moviesToLoad = 30;
-
+	
 	boolean isLoadingMoreItems = false;
-
+	
 	List<WatchedMovieInfo> movies = new ArrayList<>();
-
+	
 	SharedPreferences userSP;
 	RequestQueue requestQueue;
 	ImageLoader imageLoader;
-
+	
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
+		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_favourite_movies);
-
+		
 		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+		Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+		
 		setTitle(getResources().getString(R.string.favourite_movies));
-
+		
 		final LinearLayout content = findViewById(R.id.content);
 		final GridView gridView = findViewById(R.id.grid_view);
 		final TextView textView = findViewById(R.id.text_view);
 		final LinearLayout loading = findViewById(R.id.loading);
-
+		
 		final ProgressDialog progressDialog = new ProgressDialog(this);
 		progressDialog.setCancelable(false);
 		progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 		progressDialog.setMessage(getResources().getString(R.string.please_wait));
-
+		
 		userSP = getSharedPreferences("user", Context.MODE_PRIVATE);
 		requestQueue = Volley.newRequestQueue(this);
 		imageLoader = WatchLog.ImageLoader(this);
-
-		final LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
+		
+		final LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		
 		final GridAdapter adapter = new GridAdapter(inflater, movies, imageLoader);
 		gridView.setAdapter(adapter);
 		gridView.setOnScrollListener(new AbsListView.OnScrollListener() {
-
+			
 			@Override
-			public void onScrollStateChanged(AbsListView view, int scrollState) {}
-
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+			}
+			
 			@Override
 			public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-				if((firstVisibleItem + visibleItemCount) == totalItemCount) {
-					if(loadedMovies < totalMovies && !isLoadingMoreItems) {
-
+				if ((firstVisibleItem + visibleItemCount) == totalItemCount) {
+					if (loadedMovies < totalMovies && !isLoadingMoreItems) {
+						
 						StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_favourite_movies", response -> {
 							try {
 								JSONObject jsonObject = new JSONObject(response);
-								if(!jsonObject.getBoolean("error")) {
-
+								if (!jsonObject.getBoolean("error")) {
+									
 									totalMovies = jsonObject.getInt("total_movies");
-
+									
 									JSONArray moviesJA = jsonObject.getJSONArray("movies");
-									if(moviesJA.length() > 0) {
-										for(int i = 0; i < moviesJA.length(); i++) {
-
+									if (moviesJA.length() > 0) {
+										for (int i = 0; i < moviesJA.length(); i++) {
+											
 											loadedMovies++;
-
+											
 											JSONObject movieJO = moviesJA.getJSONObject(i);
 											JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
-
+											
 											MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
 											newMovie.setReleaseDate(movieDataJO.getString("release_date"));
 											newMovie.setPoster(movieDataJO.getString("poster"));
-
-											movies.add(new WatchedMovieInfo(movieJO.getInt("id"), movieJO.getLong("timestamp"), newMovie));
-
+											
+											movies.add(new WatchedMovieInfo(movieJO.getLong("timestamp"), newMovie));
+											
 										}
 										adapter.notifyDataSetChanged();
 									}
-
+									
 								} else {
 									Toast.makeText(FavouriteMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 								}
-							} catch(JSONException e) {
+							} catch (JSONException e) {
 								Toast.makeText(FavouriteMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 							}
 							isLoadingMoreItems = false;
 						}, error -> {
-							if(error instanceof TimeoutError) {
+							if (error instanceof TimeoutError) {
 								Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-							} else if(error instanceof NetworkError) {
+							} else if (error instanceof NetworkError) {
 								Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
 							} else {
 								Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
@@ -155,7 +156,7 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 								Map<String, String> params = new HashMap<>();
 								params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
 								params.put("email_address", userSP.getString("email_address", "undefined"));
-								params.put("language", getResources().getConfiguration().locale.getLanguage());
+								params.put("language", getResources().getConfiguration().getLocales().get(0).getLanguage());
 								params.put("loaded_movies", String.valueOf(loadedMovies));
 								params.put("movies_to_load", String.valueOf(moviesToLoad));
 								params.put("password", userSP.getString("password", "undefined"));
@@ -163,14 +164,14 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 							}
 						};
 						stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
+						
 						isLoadingMoreItems = true;
 						requestQueue.add(stringRequest2);
-
+						
 					}
 				}
 			}
-
+			
 		});
 		gridView.setOnItemClickListener((parent, view, position, id) -> {
 			Intent intent = new Intent(FavouriteMoviesActivity.this, ViewMovieActivity.class);
@@ -179,21 +180,21 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 			startActivity(intent);
 		});
 		gridView.setOnItemLongClickListener((parent, view, position, id) -> {
-
-			CharSequence[] menuItems = new CharSequence[] {
+			
+			CharSequence[] menuItems = new CharSequence[]{
 					getResources().getString(R.string.delete),
 					getResources().getString(R.string.details)
 			};
-
+			
 			AlertDialog.Builder builder1 = new AlertDialog.Builder(FavouriteMoviesActivity.this);
 			builder1.setTitle(movies.get(position).getMovieInfo().getTitle());
 			builder1.setItems(menuItems, (dialog, which) -> {
-				if(which == 0) {
-
+				if (which == 0) {
+					
 					StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_favourite_movie", response -> {
 						try {
 							JSONObject jsonObject = new JSONObject(response);
-							if(!jsonObject.getBoolean("error")) {
+							if (!jsonObject.getBoolean("error")) {
 								movies.remove(position);
 								totalMovies--;
 								loadedMovies--;
@@ -201,15 +202,15 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 							} else {
 								Toast.makeText(FavouriteMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 							}
-						} catch(JSONException e) {
+						} catch (JSONException e) {
 							Toast.makeText(FavouriteMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 						}
 						progressDialog.dismiss();
 					}, error -> {
 						progressDialog.dismiss();
-						if(error instanceof TimeoutError) {
+						if (error instanceof TimeoutError) {
 							Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-						} else if(error instanceof NetworkError) {
+						} else if (error instanceof NetworkError) {
 							Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
 						} else {
 							Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
@@ -220,74 +221,76 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 							Map<String, String> params = new HashMap<>();
 							params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
 							params.put("email_address", userSP.getString("email_address", "undefined"));
-							params.put("language", getResources().getConfiguration().locale.getLanguage());
+							params.put("language", getResources().getConfiguration().getLocales().get(0).getLanguage());
 							params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
 							params.put("password", userSP.getString("password", "undefined"));
 							return params;
 						}
 					};
 					stringRequest3.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
+					
 					progressDialog.show();
 					requestQueue.add(stringRequest3);
-
-				} else if(which == 1) {
-
+					
+				} else if (which == 1) {
+					
 					View watchedMovieDetailsDialogView = inflater.inflate(R.layout.dialog_favourite_movie_details, null);
-
+					
 					TextView watchedDate = watchedMovieDetailsDialogView.findViewById(R.id.watched_date);
 					watchedDate.setText(new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US).format(new Date(movies.get(position).getTimestamp() * 1000)));
-
+					
 					AlertDialog.Builder builder2 = new AlertDialog.Builder(FavouriteMoviesActivity.this);
 					builder2.setCancelable(false);
 					builder2.setView(watchedMovieDetailsDialogView);
-					builder2.setPositiveButton(getResources().getString(R.string.ok), (dialog1, which1) -> {});
+					builder2.setPositiveButton(getResources().getString(R.string.ok), (dialog1, which1) -> {
+					});
 					builder2.show();
-
+					
 				}
 			});
 			builder1.show();
 			return true;
 		});
-
+		
+		@SuppressLint("SetTextI18n")
 		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_favourite_movies", response -> {
 			try {
 				JSONObject jsonObject = new JSONObject(response);
-				if(!jsonObject.getBoolean("error")) {
-
+				if (!jsonObject.getBoolean("error")) {
+					
 					totalMovies = jsonObject.getInt("total_movies");
-
+					
 					JSONArray moviesJA = jsonObject.getJSONArray("movies");
-					if(moviesJA.length() > 0) {
-						for(int i = 0; i < moviesJA.length(); i++) {
-
+					if (moviesJA.length() > 0) {
+						for (int i = 0; i < moviesJA.length(); i++) {
+							
 							loadedMovies++;
-
+							
 							JSONObject movieJO = moviesJA.getJSONObject(i);
 							JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
-
+							
 							MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
 							newMovie.setReleaseDate(movieDataJO.getString("release_date"));
 							newMovie.setPoster(movieDataJO.getString("poster"));
-
-							movies.add(new WatchedMovieInfo(movieJO.getInt("id"), movieJO.getLong("timestamp"), newMovie));
-
+							
+							movies.add(new WatchedMovieInfo(movieJO.getLong("timestamp"), newMovie));
+							
 						}
 						adapter.notifyDataSetChanged();
 						textView.setVisibility(View.GONE);
 						gridView.setVisibility(View.VISIBLE);
 					}
-
+					
 				} else {
 					textView.setText(jsonObject.getString("error_msg"));
 				}
-			} catch(JSONException e) {
+			} catch (JSONException e) {
 				textView.setText("JSONException");
 			}
 			WatchLog.Utils.fadeOut(loading);
 			WatchLog.Utils.fadeIn(content);
 		}, error -> {
-			if(error instanceof TimeoutError) {
+			if (error instanceof TimeoutError) {
 				MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
 				List<Movie> movies1 = movieDao.getAllFavourite();
 				
@@ -297,7 +300,7 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 						newMovie.setReleaseDate(m.release_date);
 						newMovie.setPoster(m.poster);
 						
-						movies.add(new WatchedMovieInfo(0, 0, newMovie));
+						movies.add(new WatchedMovieInfo(0, newMovie));
 					}
 					
 					adapter.notifyDataSetChanged();
@@ -309,7 +312,7 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 				}
 				
 				textView.setText(getResources().getString(R.string.weak_internet_connection));
-			} else if(error instanceof NetworkError) {
+			} else if (error instanceof NetworkError) {
 				MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
 				List<Movie> movies1 = movieDao.getAllFavourite();
 				
@@ -319,7 +322,7 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 						newMovie.setReleaseDate(m.release_date);
 						newMovie.setPoster(m.poster);
 						
-						movies.add(new WatchedMovieInfo(0, 0, newMovie));
+						movies.add(new WatchedMovieInfo(0, newMovie));
 					}
 					
 					adapter.notifyDataSetChanged();
@@ -342,7 +345,7 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 				Map<String, String> params = new HashMap<>();
 				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
 				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("language", getResources().getConfiguration().locale.getLanguage());
+				params.put("language", getResources().getConfiguration().getLocales().get(0).getLanguage());
 				params.put("loaded_movies", String.valueOf(loadedMovies));
 				params.put("movies_to_load", String.valueOf(moviesToLoad));
 				params.put("password", userSP.getString("password", "undefined"));
@@ -350,10 +353,10 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 			}
 		};
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
+		
 		requestQueue.add(stringRequest1);
 	}
-
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == android.R.id.home) {
@@ -362,14 +365,14 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
+	
 	public static class GridAdapter extends BaseAdapter {
-
+		
 		private final LayoutInflater inflater;
 		private final List<WatchedMovieInfo> movies;
 		private final ImageLoader imageLoader;
 		private final DisplayImageOptions options;
-
+		
 		GridAdapter(LayoutInflater inflater, List<WatchedMovieInfo> movies, ImageLoader imageLoader) {
 			this.inflater = inflater;
 			this.movies = movies;
@@ -382,41 +385,41 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 					.cacheOnDisk(true)
 					.build();
 		}
-
+		
 		@Override
 		public int getCount() {
 			return movies.size();
 		}
-
+		
 		@Override
 		public WatchedMovieInfo getItem(int position) {
 			return movies.get(position);
 		}
-
+		
 		@Override
 		public long getItemId(int position) {
 			return position;
 		}
-
+		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			ViewHolder holder;
-			if(convertView == null) {
+			if (convertView == null) {
 				convertView = inflater.inflate(R.layout.grid_view_movies, parent, false);
 				holder = new ViewHolder();
 				holder.poster = convertView.findViewById(R.id.poster);
 				convertView.setTag(holder);
 			} else {
-				holder = (ViewHolder)convertView.getTag();
+				holder = (ViewHolder) convertView.getTag();
 			}
 			imageLoader.displayImage(movies.get(position).getMovieInfo().getPoster(), holder.poster, this.options);
 			return convertView;
 		}
-
+		
 		public static class ViewHolder {
 			public ImageView poster;
 		}
-
+		
 	}
-
+	
 }

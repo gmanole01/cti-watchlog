@@ -2,24 +2,18 @@ package manolegeorge.watchlog;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONException;
@@ -39,6 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
 	private Button register;
 	private ProgressDialog progressDialog;
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -59,12 +54,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 		requestQueue = Volley.newRequestQueue(this);
 
-		register.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				onRegisterClick();
-			}
-		});
+		register.setOnClickListener(v -> onRegisterClick());
 
 	}
 	
@@ -89,27 +79,24 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 		
 		FirebaseMessaging.getInstance().getToken()
-			.addOnCompleteListener(new OnCompleteListener<String>() {
-				@Override
-				public void onComplete(@NonNull Task<String> task) {
-					if (!task.isSuccessful()) {
-						return;
-					}
-					
-					// Get new FCM registration token
-					String token = task.getResult();
-					
-					register.setClickable(false);
-					progressDialog.show();
-					
-					sendRegisterRequest(
-						emailAddressString,
-						usernameString,
-						passwordString,
-						repeatPasswordString,
-						token
-					);
+			.addOnCompleteListener(task -> {
+				if (!task.isSuccessful()) {
+					return;
 				}
+				
+				// Get new FCM registration token
+				String token = task.getResult();
+				
+				register.setClickable(false);
+				progressDialog.show();
+				
+				sendRegisterRequest(
+					emailAddressString,
+					usernameString,
+					passwordString,
+					repeatPasswordString,
+					token
+				);
 			});
 	}
 	
@@ -120,43 +107,37 @@ public class RegisterActivity extends AppCompatActivity {
 		String repeatPassword,
 		String fcmToken
 	) {
-		StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.API_URL + "/register", new Response.Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				progressDialog.dismiss();
-				try {
-					JSONObject jsonObject = new JSONObject(response);
-					if(!jsonObject.getBoolean("error")) {
-						Toast.makeText(
-							RegisterActivity.this,
-							"Contul tau a fost creat! Te poti autentifica acum!",
-							Toast.LENGTH_LONG
-						).show();
-						finish();
-					} else {
-						Toast.makeText(RegisterActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-					}
-				} catch (JSONException e) {
-					Toast.makeText(RegisterActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-				}
-				register.setClickable(true);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				progressDialog.dismiss();
-				if(error instanceof TimeoutError) {
-					Toast.makeText(RegisterActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-				} else {
+		StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.API_URL + "/register", response -> {
+			progressDialog.dismiss();
+			try {
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
 					Toast.makeText(
 						RegisterActivity.this,
-						getResources().getString(R.string.error),
+						"Contul tau a fost creat! Te poti autentifica acum!",
 						Toast.LENGTH_LONG
 					).show();
-					error.printStackTrace();
+					finish();
+				} else {
+					Toast.makeText(RegisterActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 				}
-				register.setClickable(true);
+			} catch (JSONException e) {
+				Toast.makeText(RegisterActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 			}
+			register.setClickable(true);
+		}, error -> {
+			progressDialog.dismiss();
+			if(error instanceof TimeoutError) {
+				Toast.makeText(RegisterActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+			} else {
+				Toast.makeText(
+					RegisterActivity.this,
+					getResources().getString(R.string.error),
+					Toast.LENGTH_LONG
+				).show();
+				error.printStackTrace();
+			}
+			register.setClickable(true);
 		}) {
 			@Override
 			protected Map<String, String> getParams() {

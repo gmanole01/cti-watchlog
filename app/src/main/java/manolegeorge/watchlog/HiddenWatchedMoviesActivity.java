@@ -3,7 +3,6 @@ package manolegeorge.watchlog;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,7 +11,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -26,12 +24,9 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
-import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -48,12 +43,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import manolegeorge.watchlog.info.MovieInfo;
 import manolegeorge.watchlog.info.WatchedMovieInfo;
 
 @SuppressLint({"InflateParams", "SetTextI18n"})
-@SuppressWarnings("ConstantConditions")
 
 public class HiddenWatchedMoviesActivity extends AppCompatActivity {
 
@@ -69,6 +64,7 @@ public class HiddenWatchedMoviesActivity extends AppCompatActivity {
 	RequestQueue requestQueue;
 	ImageLoader imageLoader;
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -77,7 +73,7 @@ public class HiddenWatchedMoviesActivity extends AppCompatActivity {
 
 		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
 		setTitle(getResources().getString(R.string.hidden_movies));
 
@@ -109,54 +105,48 @@ public class HiddenWatchedMoviesActivity extends AppCompatActivity {
 					if((firstVisibleItem + visibleItemCount) == totalItemCount) {
 						if(loadedMovies < totalMovies && !isLoadingMoreItems) {
 
-							StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_hidden_watched_movies", new Response.Listener<String>() {
-								@Override
-								public void onResponse(String response) {
-									try {
-										JSONObject jsonObject = new JSONObject(response);
-										if(!jsonObject.getBoolean("error")) {
+							StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_hidden_watched_movies", response -> {
+								try {
+									JSONObject jsonObject = new JSONObject(response);
+									if(!jsonObject.getBoolean("error")) {
 
-											totalMovies = jsonObject.getInt("total_movies");
+										totalMovies = jsonObject.getInt("total_movies");
 
-											JSONArray moviesJA = jsonObject.getJSONArray("movies");
-											if(moviesJA.length() > 0) {
-												for(int i = 0; i < moviesJA.length(); i++) {
+										JSONArray moviesJA = jsonObject.getJSONArray("movies");
+										if(moviesJA.length() > 0) {
+											for(int i = 0; i < moviesJA.length(); i++) {
 
-													loadedMovies++;
+												loadedMovies++;
 
-													JSONObject movieJO = moviesJA.getJSONObject(i);
-													JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
+												JSONObject movieJO = moviesJA.getJSONObject(i);
+												JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
 
-													MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
-													newMovie.setReleaseDate(movieDataJO.getString("release_date"));
-													newMovie.setPoster(movieDataJO.getString("poster"));
+												MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
+												newMovie.setReleaseDate(movieDataJO.getString("release_date"));
+												newMovie.setPoster(movieDataJO.getString("poster"));
 
-													movies.add(new WatchedMovieInfo(movieJO.getInt("id"), movieJO.getLong("timestamp"), newMovie));
+												movies.add(new WatchedMovieInfo(movieJO.getLong("timestamp"), newMovie));
 
-												}
-												adapter.notifyDataSetChanged();
 											}
-
-										} else {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
+											adapter.notifyDataSetChanged();
 										}
-									} catch(JSONException e) {
-										Toast.makeText(HiddenWatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-									}
-									isLoadingMoreItems = false;
-								}
-							}, new Response.ErrorListener() {
-								@Override
-								public void onErrorResponse(VolleyError error) {
-									if(error instanceof TimeoutError) {
-										Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-									} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-										Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+
 									} else {
-										Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+										Toast.makeText(HiddenWatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 									}
-									isLoadingMoreItems = false;
+								} catch(JSONException e) {
+									Toast.makeText(HiddenWatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 								}
+								isLoadingMoreItems = false;
+							}, error -> {
+								if(error instanceof TimeoutError) {
+									Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+								} else if(error instanceof NetworkError) {
+									Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+								} else {
+									Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+								}
+								isLoadingMoreItems = false;
 							}) {
 								@Override
 								protected Map<String, String> getParams() {
@@ -180,204 +170,174 @@ public class HiddenWatchedMoviesActivity extends AppCompatActivity {
 				}
 
 			});
-			gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-				@Override
-				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					Intent intent = new Intent(HiddenWatchedMoviesActivity.this, ViewMovieActivity.class);
-					intent.putExtra("movie_id", movies.get(position).getMovieInfo().getId());
-					intent.putExtra("movie_title", movies.get(position).getMovieInfo().getTitle());
-					startActivity(intent);
-				}
+			gridView.setOnItemClickListener((parent, view, position, id) -> {
+				Intent intent = new Intent(HiddenWatchedMoviesActivity.this, ViewMovieActivity.class);
+				intent.putExtra("movie_id", movies.get(position).getMovieInfo().getId());
+				intent.putExtra("movie_title", movies.get(position).getMovieInfo().getTitle());
+				startActivity(intent);
 			});
-			gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-				@Override
-				public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+			gridView.setOnItemLongClickListener((parent, view, position, id) -> {
 
-					CharSequence menuItems[] = new CharSequence[] {
-						getResources().getString(R.string.display),
-						getResources().getString(R.string.delete),
-						getResources().getString(R.string.details)
-					};
+				CharSequence[] menuItems = new CharSequence[] {
+					getResources().getString(R.string.display),
+					getResources().getString(R.string.delete),
+					getResources().getString(R.string.details)
+				};
 
-					AlertDialog.Builder builder1 = new AlertDialog.Builder(HiddenWatchedMoviesActivity.this);
-					builder1.setTitle(movies.get(position).getMovieInfo().getTitle());
-					builder1.setItems(menuItems, new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							if(which == 0) {
+				AlertDialog.Builder builder1 = new AlertDialog.Builder(HiddenWatchedMoviesActivity.this);
+				builder1.setTitle(movies.get(position).getMovieInfo().getTitle());
+				builder1.setItems(menuItems, (dialog, which) -> {
+					if(which == 0) {
 
-								StringRequest stringRequest4 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_hidden_watched_movie", new Response.Listener<String>() {
-									@Override
-									public void onResponse(String response) {
-										try {
-											JSONObject jsonObject = new JSONObject(response);
-											if(!jsonObject.getBoolean("error")) {
-												movies.remove(position);
-												totalMovies--;
-												loadedMovies--;
-												adapter.notifyDataSetChanged();
-											} else {
-												Toast.makeText(HiddenWatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-											}
-										} catch(JSONException e) {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-										}
-										progressDialog.dismiss();
-									}
-								}, new Response.ErrorListener() {
-									@Override
-									public void onErrorResponse(VolleyError error) {
-										progressDialog.dismiss();
-										if(error instanceof TimeoutError) {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-										} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-										} else {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-										}
-									}
-								}) {
-									@Override
-									protected Map<String, String> getParams() {
-										Map<String, String> params = new HashMap<>();
-										params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-										params.put("email_address", userSP.getString("email_address", "undefined"));
-										params.put("language", getResources().getConfiguration().locale.getLanguage());
-										params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
-										params.put("password", userSP.getString("password", "undefined"));
-										return params;
-									}
-								};
-								stringRequest4.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-								progressDialog.show();
-								requestQueue.add(stringRequest4);
-
-							} else if(which == 1) {
-
-								StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_watched_movie", new Response.Listener<String>() {
-									@Override
-									public void onResponse(String response) {
-										try {
-											JSONObject jsonObject = new JSONObject(response);
-											if(!jsonObject.getBoolean("error")) {
-												movies.remove(position);
-												totalMovies--;
-												loadedMovies--;
-												adapter.notifyDataSetChanged();
-											} else {
-												Toast.makeText(HiddenWatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-											}
-										} catch(JSONException e) {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-										}
-										progressDialog.dismiss();
-									}
-								}, new Response.ErrorListener() {
-									@Override
-									public void onErrorResponse(VolleyError error) {
-										progressDialog.dismiss();
-										if(error instanceof TimeoutError) {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-										} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-										} else {
-											Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-										}
-									}
-								}) {
-									@Override
-									protected Map<String, String> getParams() {
-										Map<String, String> params = new HashMap<>();
-										params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-										params.put("email_address", userSP.getString("email_address", "undefined"));
-										params.put("language", getResources().getConfiguration().locale.getLanguage());
-										params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
-										params.put("password", userSP.getString("password", "undefined"));
-										return params;
-									}
-								};
-								stringRequest3.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-								progressDialog.show();
-								requestQueue.add(stringRequest3);
-
-							} else if(which == 2) {
-
-								View watchedMovieDetailsDialogView = inflater.inflate(R.layout.dialog_watched_movie_details, null);
-
-								TextView watchedDate = watchedMovieDetailsDialogView.findViewById(R.id.watched_date);
-								watchedDate.setText(new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US).format(new Date(movies.get(position).getTimestamp() * 1000)));
-
-								AlertDialog.Builder builder2 = new AlertDialog.Builder(HiddenWatchedMoviesActivity.this);
-								builder2.setCancelable(false);
-								builder2.setView(watchedMovieDetailsDialogView);
-								builder2.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialog, int which) {}
-									});
-									builder2.show();
-
+						StringRequest stringRequest4 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_hidden_watched_movie", response -> {
+							try {
+								JSONObject jsonObject = new JSONObject(response);
+								if(!jsonObject.getBoolean("error")) {
+									movies.remove(position);
+									totalMovies--;
+									loadedMovies--;
+									adapter.notifyDataSetChanged();
+								} else {
+									Toast.makeText(HiddenWatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
 								}
+							} catch(JSONException e) {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
 							}
-						});
-						builder1.show();
-						return true;
-					}
+							progressDialog.dismiss();
+						}, error -> {
+							progressDialog.dismiss();
+							if(error instanceof TimeoutError) {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+							} else if(error instanceof NetworkError) {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+							} else {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+							}
+						}) {
+							@Override
+							protected Map<String, String> getParams() {
+								Map<String, String> params = new HashMap<>();
+								params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
+								params.put("email_address", userSP.getString("email_address", "undefined"));
+								params.put("language", getResources().getConfiguration().locale.getLanguage());
+								params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
+								params.put("password", userSP.getString("password", "undefined"));
+								return params;
+							}
+						};
+						stringRequest4.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+						progressDialog.show();
+						requestQueue.add(stringRequest4);
+
+					} else if(which == 1) {
+
+						StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_watched_movie", response -> {
+							try {
+								JSONObject jsonObject = new JSONObject(response);
+								if(!jsonObject.getBoolean("error")) {
+									movies.remove(position);
+									totalMovies--;
+									loadedMovies--;
+									adapter.notifyDataSetChanged();
+								} else {
+									Toast.makeText(HiddenWatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
+								}
+							} catch(JSONException e) {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
+							}
+							progressDialog.dismiss();
+						}, error -> {
+							progressDialog.dismiss();
+							if(error instanceof TimeoutError) {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
+							} else if(error instanceof NetworkError) {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
+							} else {
+								Toast.makeText(HiddenWatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
+							}
+						}) {
+							@Override
+							protected Map<String, String> getParams() {
+								Map<String, String> params = new HashMap<>();
+								params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
+								params.put("email_address", userSP.getString("email_address", "undefined"));
+								params.put("language", getResources().getConfiguration().locale.getLanguage());
+								params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
+								params.put("password", userSP.getString("password", "undefined"));
+								return params;
+							}
+						};
+						stringRequest3.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+						progressDialog.show();
+						requestQueue.add(stringRequest3);
+
+					} else if(which == 2) {
+
+						View watchedMovieDetailsDialogView = inflater.inflate(R.layout.dialog_watched_movie_details, null);
+
+						TextView watchedDate = watchedMovieDetailsDialogView.findViewById(R.id.watched_date);
+						watchedDate.setText(new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US).format(new Date(movies.get(position).getTimestamp() * 1000)));
+
+						AlertDialog.Builder builder2 = new AlertDialog.Builder(HiddenWatchedMoviesActivity.this);
+						builder2.setCancelable(false);
+						builder2.setView(watchedMovieDetailsDialogView);
+						builder2.setPositiveButton(getResources().getString(R.string.ok), (dialog1, which1) -> {});
+							builder2.show();
+
+						}
+					});
+					builder1.show();
+					return true;
 				});
 
-				StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_hidden_watched_movies", new Response.Listener<String>() {
-					@Override
-					public void onResponse(String response) {
-						try {
-							JSONObject jsonObject = new JSONObject(response);
-							if(!jsonObject.getBoolean("error")) {
+				StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_hidden_watched_movies", response -> {
+					try {
+						JSONObject jsonObject = new JSONObject(response);
+						if(!jsonObject.getBoolean("error")) {
 
-								totalMovies = jsonObject.getInt("total_movies");
+							totalMovies = jsonObject.getInt("total_movies");
 
-								JSONArray moviesJA = jsonObject.getJSONArray("movies");
-								if(moviesJA.length() > 0) {
-									for(int i = 0; i < moviesJA.length(); i++) {
+							JSONArray moviesJA = jsonObject.getJSONArray("movies");
+							if(moviesJA.length() > 0) {
+								for(int i = 0; i < moviesJA.length(); i++) {
 
-										loadedMovies++;
+									loadedMovies++;
 
-										JSONObject movieJO = moviesJA.getJSONObject(i);
-										JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
+									JSONObject movieJO = moviesJA.getJSONObject(i);
+									JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
 
-										MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
-										newMovie.setReleaseDate(movieDataJO.getString("release_date"));
-										newMovie.setPoster(movieDataJO.getString("poster"));
+									MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
+									newMovie.setReleaseDate(movieDataJO.getString("release_date"));
+									newMovie.setPoster(movieDataJO.getString("poster"));
 
-										movies.add(new WatchedMovieInfo(movieJO.getInt("id"), movieJO.getLong("timestamp"), newMovie));
+									movies.add(new WatchedMovieInfo(movieJO.getLong("timestamp"), newMovie));
 
-									}
-									adapter.notifyDataSetChanged();
-									textView.setVisibility(View.GONE);
-									gridView.setVisibility(View.VISIBLE);
 								}
-
-							} else {
-								textView.setText(jsonObject.getString("error_msg"));
+								adapter.notifyDataSetChanged();
+								textView.setVisibility(View.GONE);
+								gridView.setVisibility(View.VISIBLE);
 							}
-						} catch(JSONException e) {
-							textView.setText("JSONException");
-						}
-						WatchLog.Utils.fadeOut(loading);
-						WatchLog.Utils.fadeIn(content);
-					}
-				}, new Response.ErrorListener() {
-					@Override
-					public void onErrorResponse(VolleyError error) {
-						if(error instanceof TimeoutError) {
-							textView.setText(getResources().getString(R.string.weak_internet_connection));
-						} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-							textView.setText(getResources().getString(R.string.no_internet_connection));
+
 						} else {
-							textView.setText(getResources().getString(R.string.error));
+							textView.setText(jsonObject.getString("error_msg"));
 						}
-						WatchLog.Utils.fadeOut(loading);
-						WatchLog.Utils.fadeIn(content);
+					} catch(JSONException e) {
+						textView.setText("JSONException");
 					}
+					WatchLog.Utils.fadeOut(loading);
+					WatchLog.Utils.fadeIn(content);
+				}, error -> {
+					if(error instanceof TimeoutError) {
+						textView.setText(getResources().getString(R.string.weak_internet_connection));
+					} else if(error instanceof NetworkError) {
+						textView.setText(getResources().getString(R.string.no_internet_connection));
+					} else {
+						textView.setText(getResources().getString(R.string.error));
+					}
+					WatchLog.Utils.fadeOut(loading);
+					WatchLog.Utils.fadeIn(content);
 				}) {
 					@Override
 					protected Map<String, String> getParams() {
@@ -398,20 +358,19 @@ public class HiddenWatchedMoviesActivity extends AppCompatActivity {
 
 			@Override
 			public boolean onOptionsItemSelected(MenuItem item) {
-				switch(item.getItemId()) {
-					case android.R.id.home:
+				if (item.getItemId() == android.R.id.home) {
 					finish();
 					return true;
 				}
 				return super.onOptionsItemSelected(item);
 			}
 
-			public class GridAdapter extends BaseAdapter {
+			public static class GridAdapter extends BaseAdapter {
 
-				private LayoutInflater inflater;
-				private List<WatchedMovieInfo> movies;
-				private ImageLoader imageLoader;
-				private DisplayImageOptions options;
+				private final LayoutInflater inflater;
+				private final List<WatchedMovieInfo> movies;
+				private final ImageLoader imageLoader;
+				private final DisplayImageOptions options;
 
 				GridAdapter(LayoutInflater inflater, List<WatchedMovieInfo> movies, ImageLoader imageLoader) {
 					this.inflater = inflater;
@@ -456,7 +415,7 @@ public class HiddenWatchedMoviesActivity extends AppCompatActivity {
 					return convertView;
 				}
 
-				public class ViewHolder {
+				public static class ViewHolder {
 					public ImageView poster;
 				}
 

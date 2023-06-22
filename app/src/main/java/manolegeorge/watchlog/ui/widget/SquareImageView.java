@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 
 @SuppressWarnings("SuspiciousNameCombination")
-
 public class SquareImageView extends AppCompatImageView {
 
 

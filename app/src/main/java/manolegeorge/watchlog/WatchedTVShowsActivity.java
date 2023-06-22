@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -36,9 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@SuppressLint("SetTextI18n")
-@SuppressWarnings("deprecation")
-
 public class WatchedTVShowsActivity extends AppCompatActivity {
 
 	ImageLoader imageLoader;
@@ -47,6 +43,7 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 
 	private List<TVShowInfo> tvShows = new ArrayList<>();
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -78,67 +75,58 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 
 		final GridAdapter adapter = new GridAdapter(inflater, tvShows, imageLoader);
 		gridView.setAdapter(adapter);
-		gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Intent intent = new Intent(WatchedTVShowsActivity.this, ViewTVShowActivity.class);
-				intent.putExtra("tv_show_id", tvShows.get(position).getId());
-				intent.putExtra("tv_show_name", tvShows.get(position).getName());
-				startActivity(intent);
-			}
+		gridView.setOnItemClickListener((parent, view, position, id) -> {
+			Intent intent = new Intent(WatchedTVShowsActivity.this, ViewTVShowActivity.class);
+			intent.putExtra("tv_show_id", tvShows.get(position).getId());
+			intent.putExtra("tv_show_name", tvShows.get(position).getName());
+			startActivity(intent);
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/watched/all", new Response.Listener<String>() {
+		@SuppressLint("SetTextI18n")
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/watched/all", response -> {
+			try {
+				JSONObject jsonObject = new JSONObject(response);
+				if(!jsonObject.getBoolean("error")) {
 
-			@Override
-			public void onResponse(String response) {
-				try {
-					JSONObject jsonObject = new JSONObject(response);
-					if(!jsonObject.getBoolean("error")) {
+					JSONArray tvShowsJA = jsonObject.getJSONArray("tv_shows");
+					if(tvShowsJA.length() > 0) {
+						for(int i = 0; i < tvShowsJA.length(); i++) {
 
-						JSONArray tvShowsJA = jsonObject.getJSONArray("tv_shows");
-						if(tvShowsJA.length() > 0) {
-							for(int i = 0; i < tvShowsJA.length(); i++) {
+							JSONObject tvShowJO = tvShowsJA.getJSONObject(i);
 
-								JSONObject tvShowJO = tvShowsJA.getJSONObject(i);
+							TVShowInfo newTVShow = new TVShowInfo(tvShowJO.getInt("id"), tvShowJO.getString("name"));
+							newTVShow.setPoster(tvShowJO.getString("poster"));
+							newTVShow.setEpisodesCount(tvShowJO.getInt("episode_count"));
+							newTVShow.setWatchedEpisodesCount(tvShowJO.getInt("watched_episodes_count"));
 
-								TVShowInfo newTVShow = new TVShowInfo(tvShowJO.getInt("id"), tvShowJO.getString("name"));
-								newTVShow.setPoster(tvShowJO.getString("poster"));
-								newTVShow.setEpisodesCount(tvShowJO.getInt("episode_count"));
-								newTVShow.setWatchedEpisodesCount(tvShowJO.getInt("watched_episodes_count"));
+							tvShows.add(newTVShow);
 
-								tvShows.add(newTVShow);
-
-							}
-							adapter.notifyDataSetChanged();
-							textView.setVisibility(View.GONE);
-							gridView.setVisibility(View.VISIBLE);
 						}
-
-					} else {
-						textView.setText(jsonObject.getString("error_msg"));
+						adapter.notifyDataSetChanged();
+						textView.setVisibility(View.GONE);
+						gridView.setVisibility(View.VISIBLE);
 					}
-				} catch(JSONException e) {
-					e.printStackTrace();
-					textView.setText("JSONException");
-				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				error.printStackTrace();
-				if(error instanceof TimeoutError) {
-					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-					textView.setText(getResources().getString(R.string.no_internet_connection));
+
 				} else {
-					textView.setText(getResources().getString(R.string.error));
+					textView.setText(jsonObject.getString("error_msg"));
 				}
-				WatchLog.Utils.fadeOut(loading);
-				WatchLog.Utils.fadeIn(content);
+			} catch(JSONException e) {
+				e.printStackTrace();
+				textView.setText("JSONException");
 			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
+		}, error -> {
+			error.printStackTrace();
+			if(error instanceof TimeoutError) {
+				textView.setText(getResources().getString(R.string.weak_internet_connection));
+			} else if(error instanceof NetworkError) {
+				textView.setText(getResources().getString(R.string.no_internet_connection));
+			} else {
+				textView.setText(getResources().getString(R.string.error));
+			}
+			WatchLog.Utils.fadeOut(loading);
+			WatchLog.Utils.fadeIn(content);
 		}) {
 			@Override
 			public Map<String, String> getHeaders() {
@@ -156,15 +144,14 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-			case android.R.id.home:
-				finish();
-				return true;
+		if (item.getItemId() == android.R.id.home) {
+			finish();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
-	public class GridAdapter extends BaseAdapter {
+	public static class GridAdapter extends BaseAdapter {
 
 		private LayoutInflater inflater;
 		private List<TVShowInfo> tvShows;
@@ -217,7 +204,7 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 			return convertView;
 		}
 
-		public class ViewHolder {
+		public static class ViewHolder {
 			public ImageView poster;
 			public ProgressBar progressBar;
 		}
