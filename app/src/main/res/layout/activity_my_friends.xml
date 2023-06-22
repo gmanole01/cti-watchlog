@@ -24,18 +24,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <RelativeLayout
-            android:layout_above="@+id/ad_view"
             android:layout_height="match_parent"
             android:layout_width="match_parent">
-            <LinearLayout
+            <RelativeLayout
                 android:gravity="center"
                 android:id="@+id/content"
                 android:layout_height="match_parent"
                 android:layout_width="match_parent"
                 android:orientation="vertical"
                 android:visibility="gone">
-                <ListView
-                    android:id="@+id/list_view"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view"
                     android:layout_height="match_parent"
                     android:layout_width="match_parent"
                     android:visibility="gone" />
@@ -45,7 +44,7 @@
                     android:layout_width="wrap_content"
                     android:padding="10dp"
                     android:text="@string/no_friends" />
-            </LinearLayout>
+            </RelativeLayout>
             <LinearLayout
                 android:gravity="center"
                 android:id="@+id/loading"

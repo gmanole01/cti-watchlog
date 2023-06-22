@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,11 +16,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -79,8 +84,8 @@ public class MyFriendsActivity extends AppCompatActivity {
 
 		LayoutInflater inflater = LayoutInflater.from(this);
 
-		final LinearLayout content = findViewById(R.id.content);
-		final ListView listView = findViewById(R.id.list_view);
+		final RelativeLayout content = findViewById(R.id.content);
+		final RecyclerView recyclerView = findViewById(R.id.recycler_view);
 		final TextView textView = findViewById(R.id.text_view);
 		final LinearLayout loading = findViewById(R.id.loading);
 
@@ -94,7 +99,9 @@ public class MyFriendsActivity extends AppCompatActivity {
 		requestQueue = Volley.newRequestQueue(this);
 
 		adapter = new ListAdapter(imageLoader, inflater, requestQueue, friends);
-		listView.setAdapter(adapter);
+		
+		recyclerView.setLayoutManager(new LinearLayoutManager(this));
+		recyclerView.setAdapter(adapter);
 		/*
 		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
@@ -134,7 +141,8 @@ public class MyFriendsActivity extends AppCompatActivity {
 							}
 							adapter.notifyDataSetChanged();
 							textView.setVisibility(View.GONE);
-							listView.setVisibility(View.VISIBLE);
+							recyclerView.setVisibility(View.VISIBLE);
+							content.setGravity(Gravity.TOP);
 						}
 
 					} else {
@@ -187,8 +195,23 @@ public class MyFriendsActivity extends AppCompatActivity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	public static class VH extends RecyclerView.ViewHolder {
+		private View itemView;
+		private ImageView profilePicture;
+		private TextView username;
+		private TextView date;
+		public VH(@NonNull View itemView) {
+			super(itemView);
+			this.itemView = itemView;
+			
+			this.profilePicture = itemView.findViewById(R.id.profile_picture);
+			this.username = itemView.findViewById(R.id.username);
+			this.date = itemView.findViewById(R.id.date);
+		}
+	}
 
-	public static class ListAdapter extends BaseAdapter {
+	public static class ListAdapter extends RecyclerView.Adapter<VH> {
 
 	    ImageLoader imageLoader;
 		LayoutInflater inflater;
@@ -201,47 +224,25 @@ public class MyFriendsActivity extends AppCompatActivity {
 			this.requestQueue = mRequestQueue;
 			this.friends = mFriends;
 		}
-
+		
+		@NonNull
 		@Override
-		public int getCount() {
-			return this.friends.size();
+		public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+			View v = inflater.inflate(R.layout.list_view_my_friends, parent, false);
+			return new VH(v);
 		}
-
+		
 		@Override
-		public FriendInfo getItem(int position) {
-			return this.friends.get(position);
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return position;
-		}
-
-		@Override
-		public View getView(final int position, View convertView, ViewGroup parent) {
-			ViewHolder holder;
-			if(convertView == null) {
-				convertView = this.inflater.inflate(R.layout.list_view_my_friends, parent, false);
-				holder = new ViewHolder();
-				holder.profilePicture = convertView.findViewById(R.id.profile_picture);
-				holder.username = convertView.findViewById(R.id.username);
-				holder.date = convertView.findViewById(R.id.date);
-				convertView.setTag(holder);
-			} else {
-				holder = (ViewHolder)convertView.getTag();
-			}
-            imageLoader.displayImage(friends.get(position).getUserInfo().getProfilePicture(), holder.profilePicture, new DisplayImageOptions.Builder().cacheInMemory(false).cacheOnDisk(true).build());
+		public void onBindViewHolder(@NonNull VH holder, int position) {
+			imageLoader.displayImage(friends.get(position).getUserInfo().getProfilePicture(), holder.profilePicture, new DisplayImageOptions.Builder().cacheInMemory(false).cacheOnDisk(true).build());
 			holder.username.setText(friends.get(position).getUserInfo().getUsername());
 			holder.date.setText(new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US).format(new Date(friends.get(position).getTimestamp() * 1000)));
-			return convertView;
 		}
-
-		class ViewHolder {
-			ImageView profilePicture;
-			TextView username;
-			TextView date;
+		
+		@Override
+		public int getItemCount() {
+			return friends.size();
 		}
-
 	}
 
 }
