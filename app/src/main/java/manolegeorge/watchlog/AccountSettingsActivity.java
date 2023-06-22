@@ -133,7 +133,7 @@ public class AccountSettingsActivity extends AppCompatActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
+        super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == 1) {
             if(resultCode == RESULT_OK) {
                 Uri imageUri = data.getData();
@@ -143,68 +143,65 @@ public class AccountSettingsActivity extends AppCompatActivity {
                         try {
 
                             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-                            if(bitmap.getWidth() >= 1000 && bitmap.getHeight() >= 1000) {
-                                if(bitmap.getWidth() <= 3000 && bitmap.getHeight() <= 3000) {
-
-                                    final String base64 = WatchLog.bitmapToBase64(bitmap, extension);
-                                    if(base64 != null) {
-
-                                        StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/change_profile_picture", new Response.Listener<String>() {
-                                            @Override
-                                            public void onResponse(String response) {
-                                                progressDialog.dismiss();
-                                                try {
-                                                    JSONObject jsonObject = new JSONObject(response);
-                                                    if(!jsonObject.getBoolean("error")) {
-
-                                                        String nProfilePicture = jsonObject.getJSONObject("data").getString("url");
-
-                                                        SharedPreferences.Editor userSPEditor = userSP.edit();
-                                                        userSPEditor.putString("profile_picture", nProfilePicture);
-                                                        userSPEditor.apply();
-
-                                                        imageLoader.displayImage(WatchLog.Utils.getProfilePicture(userSP), profilePictureIA, WatchLog.getImageLoaderOptions());
-
-                                                    } else {
-                                                        Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-                                                    }
-                                                } catch(JSONException e) {
-                                                    Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
-                                                }
+    
+                            final String base64 = WatchLog.bitmapToBase64(bitmap, extension);
+                            if(base64 != null) {
+        
+                                StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/account/picture/new", new Response.Listener<String>() {
+                                    @Override
+                                    public void onResponse(String response) {
+                                        progressDialog.dismiss();
+                                        try {
+                                            JSONObject jsonObject = new JSONObject(response);
+                                            if(!jsonObject.getBoolean("error")) {
+                        
+                                                String nProfilePicture = jsonObject.getJSONObject("data").getString("url");
+                        
+                                                SharedPreferences.Editor userSPEditor = userSP.edit();
+                                                userSPEditor.putString("profile_picture", nProfilePicture);
+                                                userSPEditor.apply();
+                        
+                                                imageLoader.displayImage(WatchLog.Utils.getProfilePicture(userSP), profilePictureIA, WatchLog.getImageLoaderOptions());
+                        
+                                            } else {
+                                                Toast.makeText(getApplicationContext(), jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
                                             }
-                                        }, new Response.ErrorListener() {
-                                            @Override
-                                            public void onErrorResponse(VolleyError error) {
-                                                progressDialog.dismiss();
-                                                Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-                                            }
-                                        }) {
-                                            @Override
-                                            protected Map<String, String> getParams() {
-                                                Map<String, String> params = new HashMap<>();
-                                                params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-                                                params.put("email_address", userSP.getString("email_address", "undefined"));
-                                                params.put("extension", extension);
-                                                params.put("language", getResources().getConfiguration().locale.getLanguage());
-                                                params.put("password", userSP.getString("password", "undefined"));
-                                                params.put("profile_picture", base64);
-                                                return params;
-                                            }
-                                        };
-                                        stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-                                        progressDialog.show();
-                                        requestQueue.add(stringRequest1);
-
-                                    } else {
+                                        } catch(JSONException e) {
+                                            e.printStackTrace();
+                                            Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+                                }, new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        error.printStackTrace();
+                                        progressDialog.dismiss();
                                         Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
                                     }
-
-                                } else {
-                                    Toast.makeText(getApplicationContext(), getResources().getString(R.string.profile_picture_error_2), Toast.LENGTH_LONG).show();
-                                }
+                                }) {
+                                    @Override
+                                    protected Map<String, String> getParams() {
+                                        Map<String, String> params = new HashMap<>();
+                                        params.put("extension", extension);
+                                        params.put("profile_picture", base64);
+                                        return params;
+                                    }
+            
+                                    @Override
+                                    public Map<String, String> getHeaders() {
+                                        Map<String, String> headers = new HashMap<>();
+                                        headers.put("Accept", "application/json");
+                                        headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+                                        return headers;
+                                    }
+                                };
+                                stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        
+                                progressDialog.show();
+                                requestQueue.add(stringRequest1);
+        
                             } else {
-                                Toast.makeText(getApplicationContext(), getResources().getString(R.string.profile_picture_error_1), Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
                             }
 
                         } catch(IOException e) {

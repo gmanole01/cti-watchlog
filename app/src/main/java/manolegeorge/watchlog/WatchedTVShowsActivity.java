@@ -88,7 +88,7 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 			}
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_watched_tv_shows", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/watched/all", new Response.Listener<String>() {
 
 			@Override
 			public void onResponse(String response) {
@@ -104,7 +104,7 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 
 								TVShowInfo newTVShow = new TVShowInfo(tvShowJO.getInt("id"), tvShowJO.getString("name"));
 								newTVShow.setPoster(tvShowJO.getString("poster"));
-								newTVShow.setEpisodesCount(tvShowJO.getInt("episodes_count"));
+								newTVShow.setEpisodesCount(tvShowJO.getInt("episode_count"));
 								newTVShow.setWatchedEpisodesCount(tvShowJO.getInt("watched_episodes_count"));
 
 								tvShows.add(newTVShow);
@@ -119,6 +119,7 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 						textView.setText(jsonObject.getString("error_msg"));
 					}
 				} catch(JSONException e) {
+					e.printStackTrace();
 					textView.setText("JSONException");
 				}
 				WatchLog.Utils.fadeOut(loading);
@@ -127,6 +128,7 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 		}, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError error) {
+				error.printStackTrace();
 				if(error instanceof TimeoutError) {
 					textView.setText(getResources().getString(R.string.weak_internet_connection));
 				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
@@ -139,13 +141,11 @@ public class WatchedTVShowsActivity extends AppCompatActivity {
 			}
 		}) {
 			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("language", getResources().getConfiguration().locale.getLanguage());
-				params.put("password", userSP.getString("password", "undefined"));
-				return params;
+			public Map<String, String> getHeaders() {
+				Map<String, String> headers = new HashMap<>();
+				headers.put("Accept", "application/json");
+				headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+				return headers;
 			}
 		};
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));

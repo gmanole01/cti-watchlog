@@ -68,7 +68,7 @@ public class TVShowsActivityFragmentGenres extends Fragment {
 			}
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_genres", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/genres", new Response.Listener<String>() {
 
 			@Override
 			public void onResponse(String response) {
@@ -95,6 +95,7 @@ public class TVShowsActivityFragmentGenres extends Fragment {
 					}
 
 				} catch(JSONException e) {
+					e.printStackTrace();
 					textView.setText("JSONException");
 				}
 				WatchLog.Utils.fadeOut(loading);
@@ -103,6 +104,7 @@ public class TVShowsActivityFragmentGenres extends Fragment {
 		}, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError error) {
+				error.printStackTrace();
 				if(error instanceof TimeoutError) {
 					textView.setText(getResources().getString(R.string.weak_internet_connection));
 				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
@@ -113,17 +115,7 @@ public class TVShowsActivityFragmentGenres extends Fragment {
 				WatchLog.Utils.fadeOut(loading);
 				WatchLog.Utils.fadeIn(content);
 			}
-		}) {
-			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("language", getContext().getResources().getConfiguration().locale.getLanguage());
-				params.put("password", userSP.getString("password", "undefined"));
-				return params;
-			}
-		};
+		});
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
 		requestQueue.add(stringRequest1);

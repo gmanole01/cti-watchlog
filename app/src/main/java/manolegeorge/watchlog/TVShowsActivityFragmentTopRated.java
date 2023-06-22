@@ -78,7 +78,7 @@ public class TVShowsActivityFragmentTopRated extends Fragment {
 			public void onClick(View v) {
 				page = page + 1;
 
-				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/top_rated", new Response.Listener<String>() {
+				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/top_rated", new Response.Listener<String>() {
 					@Override
 					public void onResponse(String response) {
 						try {
@@ -136,10 +136,7 @@ public class TVShowsActivityFragmentTopRated extends Fragment {
 					@Override
 					protected Map<String, String> getParams() {
 						Map<String, String> params = new HashMap<>();
-						params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-						params.put("email_address", userSP.getString("email_address", "undefined"));
-						params.put("language", getResources().getConfiguration().locale.getLanguage());
-						params.put("password", userSP.getString("password", "undefined"));
+						params.put("page", String.valueOf(page));
 						return params;
 					}
 				};
@@ -151,7 +148,7 @@ public class TVShowsActivityFragmentTopRated extends Fragment {
 			}
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/top_rated", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/shows/top_rated", new Response.Listener<String>() {
 
 			@Override
 			public void onResponse(String response) {
@@ -194,6 +191,7 @@ public class TVShowsActivityFragmentTopRated extends Fragment {
 					}
 
 				} catch(JSONException e) {
+					e.printStackTrace();
 					textView.setText("JSONException");
 				}
 				WatchLog.Utils.fadeOut(loading);
@@ -202,6 +200,7 @@ public class TVShowsActivityFragmentTopRated extends Fragment {
 		}, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError error) {
+				error.printStackTrace();
 				if(error instanceof TimeoutError) {
 					textView.setText(getResources().getString(R.string.weak_internet_connection));
 				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
@@ -212,16 +211,7 @@ public class TVShowsActivityFragmentTopRated extends Fragment {
 				WatchLog.Utils.fadeOut(loading);
 				WatchLog.Utils.fadeIn(content);
 			}
-		}) {
-			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("password", userSP.getString("password", "undefined"));
-				return params;
-			}
-		};
+		});
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
 		requestQueue.add(stringRequest1);
