@@ -129,7 +129,7 @@ public class MoviesActivityFragmentLatest extends Fragment {
 					public void onErrorResponse(VolleyError error) {
 						if(error instanceof TimeoutError) {
 							Toast.makeText(getContext(), getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-						} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
+						} else if(error instanceof NetworkError) {
 							Toast.makeText(getContext(), getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
 						} else {
 							Toast.makeText(getContext(), getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
@@ -211,7 +211,7 @@ public class MoviesActivityFragmentLatest extends Fragment {
 			public void onErrorResponse(VolleyError error) {
 				if(error instanceof TimeoutError) {
 					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
+				} else if(error instanceof NetworkError) {
 					textView.setText(getResources().getString(R.string.no_internet_connection));
 				} else {
 					textView.setText(getResources().getString(R.string.error));
