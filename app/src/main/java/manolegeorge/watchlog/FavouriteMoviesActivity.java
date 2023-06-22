@@ -49,6 +49,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import manolegeorge.watchlog.db.AppDatabase;
+import manolegeorge.watchlog.db.Movie;
+import manolegeorge.watchlog.db.MovieDao;
 import manolegeorge.watchlog.info.MovieInfo;
 import manolegeorge.watchlog.info.WatchedMovieInfo;
 
@@ -150,7 +153,7 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 							public void onErrorResponse(VolleyError error) {
 								if(error instanceof TimeoutError) {
 									Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-								} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
+								} else if(error instanceof NetworkError) {
 									Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
 								} else {
 									Toast.makeText(FavouriteMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
@@ -319,8 +322,48 @@ public class FavouriteMoviesActivity extends AppCompatActivity {
 			@Override
 			public void onErrorResponse(VolleyError error) {
 				if(error instanceof TimeoutError) {
+					MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
+					List<Movie> movies1 = movieDao.getAllFavourite();
+					
+					if (!movies1.isEmpty()) {
+						for (Movie m : movies1) {
+							MovieInfo newMovie = new MovieInfo(m.api_id, m.title);
+							newMovie.setReleaseDate(m.release_date);
+							newMovie.setPoster(m.poster);
+							
+							movies.add(new WatchedMovieInfo(0, 0, newMovie));
+						}
+						
+						adapter.notifyDataSetChanged();
+						textView.setVisibility(View.GONE);
+						gridView.setVisibility(View.VISIBLE);
+						WatchLog.Utils.fadeOut(loading);
+						WatchLog.Utils.fadeIn(content);
+						return;
+					}
+					
 					textView.setText(getResources().getString(R.string.weak_internet_connection));
-				} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
+				} else if(error instanceof NetworkError) {
+					MovieDao movieDao = AppDatabase.getInstance(getApplicationContext()).movieDao();
+					List<Movie> movies1 = movieDao.getAllFavourite();
+					
+					if (!movies1.isEmpty()) {
+						for (Movie m : movies1) {
+							MovieInfo newMovie = new MovieInfo(m.api_id, m.title);
+							newMovie.setReleaseDate(m.release_date);
+							newMovie.setPoster(m.poster);
+							
+							movies.add(new WatchedMovieInfo(0, 0, newMovie));
+						}
+						
+						adapter.notifyDataSetChanged();
+						textView.setVisibility(View.GONE);
+						gridView.setVisibility(View.VISIBLE);
+						WatchLog.Utils.fadeOut(loading);
+						WatchLog.Utils.fadeIn(content);
+						return;
+					}
+					
 					textView.setText(getResources().getString(R.string.no_internet_connection));
 				} else {
 					textView.setText(getResources().getString(R.string.error));

@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -25,7 +24,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -46,7 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SuppressLint("InflateParams")
-@SuppressWarnings({"ConstantConditions", "deprecation"})
+@SuppressWarnings({"deprecation"})
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -160,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 								}
 								
 								@Override
-								public Map<String, String> getHeaders() throws AuthFailureError {
+								public Map<String, String> getHeaders() {
 									Map<String, String> headers = new HashMap<>();
 									headers.put("Accept", "application/json");
 									headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
