@@ -59,10 +59,6 @@ import manolegeorge.watchlog.info.WatchedMovieInfo;
 
 public class WatchedMoviesActivity extends AppCompatActivity {
 
-	int totalMovies = 0;
-	int loadedMovies = 0;
-	int moviesToLoad = 30;
-
 	boolean isLoadingMoreItems = false;
 
 	List<WatchedMovieInfo> movies = new ArrayList<>();
@@ -101,89 +97,6 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 
 		final GridAdapter adapter = new GridAdapter(inflater, movies, imageLoader);
 		gridView.setAdapter(adapter);
-		gridView.setOnScrollListener(new AbsListView.OnScrollListener() {
-
-			@Override
-			public void onScrollStateChanged(AbsListView view, int scrollState) {
-				//
-			}
-
-			@Override
-			public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-				if((firstVisibleItem + visibleItemCount) == totalItemCount) {
-					if(loadedMovies < totalMovies && !isLoadingMoreItems) {
-
-						StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_watched_movies", new Response.Listener<String>() {
-							@Override
-							public void onResponse(String response) {
-								try {
-									JSONObject jsonObject = new JSONObject(response);
-									if(!jsonObject.getBoolean("error")) {
-
-										totalMovies = jsonObject.getInt("total_movies");
-
-										JSONArray moviesJA = jsonObject.getJSONArray("movies");
-										if(moviesJA.length() > 0) {
-											for(int i = 0; i < moviesJA.length(); i++) {
-
-												loadedMovies++;
-
-												JSONObject movieJO = moviesJA.getJSONObject(i);
-												JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
-
-												MovieInfo newMovie = new MovieInfo(movieDataJO.getInt("id"), movieDataJO.getString("title"));
-												newMovie.setReleaseDate(movieDataJO.getString("release_date"));
-												newMovie.setPoster(movieDataJO.getString("poster"));
-
-												movies.add(new WatchedMovieInfo(movieJO.getInt("id"), movieJO.getLong("timestamp"), newMovie));
-
-											}
-											adapter.notifyDataSetChanged();
-										}
-
-									} else {
-										Toast.makeText(WatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-									}
-								} catch(JSONException e) {
-									Toast.makeText(WatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-								}
-								isLoadingMoreItems = false;
-							}
-						}, new Response.ErrorListener() {
-							@Override
-							public void onErrorResponse(VolleyError error) {
-								if(error instanceof TimeoutError) {
-									Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-								} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-									Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-								} else {
-									Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-								}
-								isLoadingMoreItems = false;
-							}
-						}) {
-							@Override
-							protected Map<String, String> getParams() {
-								Map<String, String> params = new HashMap<>();
-								params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-								params.put("email_address", userSP.getString("email_address", "undefined"));
-								params.put("language", getResources().getConfiguration().locale.getLanguage());
-								params.put("loaded_movies", String.valueOf(loadedMovies));
-								params.put("movies_to_load", String.valueOf(moviesToLoad));
-								params.put("password", userSP.getString("password", "undefined"));
-								return params;
-							}
-						};
-						stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-						isLoadingMoreItems = true;
-						requestQueue.add(stringRequest2);
-
-					}
-				}
-			}
-
-		});
 		gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -197,7 +110,7 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
 
-				CharSequence menuItems[] = new CharSequence[] {
+				CharSequence[] menuItems = new CharSequence[] {
 					getResources().getString(R.string.hide),
 					getResources().getString(R.string.delete),
 					getResources().getString(R.string.details)
@@ -208,56 +121,7 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 				builder1.setItems(menuItems, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						if(which == 0) {
-
-							StringRequest stringRequest4 = new StringRequest(Request.Method.POST, Constants.API_URL + "/hide_watched_movie", new Response.Listener<String>() {
-								@Override
-								public void onResponse(String response) {
-									try {
-										JSONObject jsonObject = new JSONObject(response);
-										if(!jsonObject.getBoolean("error")) {
-											movies.remove(position);
-											totalMovies--;
-											loadedMovies--;
-											adapter.notifyDataSetChanged();
-										} else {
-											Toast.makeText(WatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
-										}
-									} catch(JSONException e) {
-										Toast.makeText(WatchedMoviesActivity.this, "JSONException", Toast.LENGTH_LONG).show();
-									}
-									progressDialog.dismiss();
-								}
-							}, new Response.ErrorListener() {
-								@Override
-								public void onErrorResponse(VolleyError error) {
-									progressDialog.dismiss();
-									if(error instanceof TimeoutError) {
-										Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
-									} else if(error instanceof NoConnectionError || error instanceof NetworkError) {
-										Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.no_internet_connection), Toast.LENGTH_LONG).show();
-									} else {
-										Toast.makeText(WatchedMoviesActivity.this, getResources().getString(R.string.error), Toast.LENGTH_LONG).show();
-									}
-								}
-							}) {
-								@Override
-								protected Map<String, String> getParams() {
-									Map<String, String> params = new HashMap<>();
-									params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-									params.put("email_address", userSP.getString("email_address", "undefined"));
-									params.put("language", getResources().getConfiguration().locale.getLanguage());
-									params.put("movie_id", String.valueOf(movies.get(position).getMovieInfo().getId()));
-									params.put("password", userSP.getString("password", "undefined"));
-									return params;
-								}
-							};
-							stringRequest4.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-							progressDialog.show();
-							requestQueue.add(stringRequest4);
-
-						} else if(which == 1) {
+						if(which == 1) {
 
 							StringRequest stringRequest3 = new StringRequest(Request.Method.POST, Constants.API_URL + "/remove_watched_movie", new Response.Listener<String>() {
 								@Override
@@ -266,8 +130,8 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 										JSONObject jsonObject = new JSONObject(response);
 										if(!jsonObject.getBoolean("error")) {
 											movies.remove(position);
-											totalMovies--;
-											loadedMovies--;
+											//totalMovies--;
+											//loadedMovies--;
 											adapter.notifyDataSetChanged();
 										} else {
 											Toast.makeText(WatchedMoviesActivity.this, jsonObject.getString("error_msg"), Toast.LENGTH_LONG).show();
@@ -332,20 +196,16 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 			}
 		});
 
-		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/get_watched_movies", new Response.Listener<String>() {
+		StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/watched/all", new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response) {
 				try {
 					JSONObject jsonObject = new JSONObject(response);
 					if(!jsonObject.getBoolean("error")) {
 
-						totalMovies = jsonObject.getInt("total_movies");
-
 						JSONArray moviesJA = jsonObject.getJSONArray("movies");
 						if(moviesJA.length() > 0) {
 							for(int i = 0; i < moviesJA.length(); i++) {
-
-								loadedMovies++;
 
 								JSONObject movieJO = moviesJA.getJSONObject(i);
 								JSONObject movieDataJO = movieJO.getJSONObject("movie_data");
@@ -386,15 +246,11 @@ public class WatchedMoviesActivity extends AppCompatActivity {
 			}
 		}) {
 			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<>();
-				params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-				params.put("email_address", userSP.getString("email_address", "undefined"));
-				params.put("language", getResources().getConfiguration().locale.getLanguage());
-				params.put("loaded_movies", String.valueOf(loadedMovies));
-				params.put("movies_to_load", String.valueOf(moviesToLoad));
-				params.put("password", userSP.getString("password", "undefined"));
-				return params;
+			public Map<String, String> getHeaders() {
+				Map<String, String> headers = new HashMap<>();
+				headers.put("Accept", "application/json");
+				headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+				return headers;
 			}
 		};
 		stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));

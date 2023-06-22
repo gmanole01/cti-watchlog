@@ -20,6 +20,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
 import com.android.volley.NoConnectionError;
@@ -253,7 +254,7 @@ public class ViewMovieActivity extends AppCompatActivity {
 
 			case R.id.mark_as_watched:
 				progressDialog.show();
-				StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/mark_movie_as_watched", new Response.Listener<String>() {
+				StringRequest stringRequest1 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/watched/add", new Response.Listener<String>() {
 					@Override
 					public void onResponse(String response) {
 						progressDialog.dismiss();
@@ -272,6 +273,7 @@ public class ViewMovieActivity extends AppCompatActivity {
 					@Override
 					public void onErrorResponse(VolleyError error) {
 						progressDialog.dismiss();
+						error.printStackTrace();
 						if(error instanceof TimeoutError) {
 							Toast.makeText(ViewMovieActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
 						} else if(
@@ -287,12 +289,16 @@ public class ViewMovieActivity extends AppCompatActivity {
 					@Override
 					protected Map<String, String> getParams() {
 						Map<String, String> params = new HashMap<>();
-						params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-						params.put("email_address", userSP.getString("email_address", "undefined"));
-						params.put("language", getResources().getConfiguration().locale.getLanguage());
-						params.put("movie_id", String.valueOf(movieId));
-						params.put("password", userSP.getString("password", "undefined"));
+						params.put("id", String.valueOf(movieId));
 						return params;
+					}
+					
+					@Override
+					public Map<String, String> getHeaders() throws AuthFailureError {
+						Map<String, String> headers = new HashMap<>();
+						headers.put("Accept", "application/json");
+						headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+						return headers;
 					}
 				};
 				stringRequest1.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
@@ -301,7 +307,7 @@ public class ViewMovieActivity extends AppCompatActivity {
 
 			case R.id.add_to_favourites:
 
-				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/add_favourite_movie", new Response.Listener<String>() {
+				StringRequest stringRequest2 = new StringRequest(Request.Method.POST, Constants.API_URL + "/movies/favourites/add", new Response.Listener<String>() {
 					@Override
 					public void onResponse(String response) {
 						progressDialog.dismiss();
@@ -320,6 +326,7 @@ public class ViewMovieActivity extends AppCompatActivity {
 					@Override
 					public void onErrorResponse(VolleyError error) {
 						progressDialog.dismiss();
+						error.printStackTrace();
 						if(error instanceof TimeoutError) {
 							Toast.makeText(ViewMovieActivity.this, getResources().getString(R.string.weak_internet_connection), Toast.LENGTH_LONG).show();
 						} else if(
@@ -335,12 +342,16 @@ public class ViewMovieActivity extends AppCompatActivity {
 					@Override
 					protected Map<String, String> getParams() {
 						Map<String, String> params = new HashMap<>();
-						params.put("app_versionCode", String.valueOf(BuildConfig.VERSION_CODE));
-						params.put("email_address", userSP.getString("email_address", "undefined"));
-						params.put("language", getResources().getConfiguration().locale.getLanguage());
-						params.put("movie_id", String.valueOf(movieId));
-						params.put("password", userSP.getString("password", "undefined"));
+						params.put("id", String.valueOf(movieId));
 						return params;
+					}
+					
+					@Override
+					public Map<String, String> getHeaders() throws AuthFailureError {
+						Map<String, String> headers = new HashMap<>();
+						headers.put("Accept", "application/json");
+						headers.put("Authorization", "Bearer " + userSP.getString("auth_token", ""));
+						return headers;
 					}
 				};
 				stringRequest2.setRetryPolicy(new DefaultRetryPolicy(0, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
