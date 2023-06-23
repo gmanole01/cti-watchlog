@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
@@ -60,7 +61,7 @@ public class ViewMovieActivity extends AppCompatActivity {
 	private boolean isSendingRating = false;
 	
 	private ImageView backdrop;
-	private LinearLayout content;
+	private ViewGroup content;
 	private LinearLayout loading;
 	private TextView title;
 	private TextView runtime;

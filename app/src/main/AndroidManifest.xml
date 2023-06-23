@@ -107,7 +107,6 @@
 
 		<activity
 			android:name=".ViewMovieActivity"
-			android:screenOrientation="portrait"
 			android:exported="false"
 			android:theme="@style/AppTheme.NoActionBar" />
 

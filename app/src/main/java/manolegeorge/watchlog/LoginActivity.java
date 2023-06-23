@@ -138,6 +138,7 @@ public class LoginActivity extends AppCompatActivity {
 						editor.putString("auth_token", dataJO.getString("access_token"));
 						editor.putString("email_address", dataJO.getString("email_address"));
 						editor.putString("username", dataJO.getString("username"));
+						editor.putString("profile_picture", dataJO.getString("profile_picture"));
 						editor.apply();
 						
 						Intent intent = new Intent(LoginActivity.this, MainActivity.class);
